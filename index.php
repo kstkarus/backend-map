@@ -13,6 +13,12 @@ require_once __DIR__ . '/attendees.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
+if ($method === 'GET' && $path === '/docs') {
+    header('Content-Type: text/html; charset=utf-8');
+    readfile(__DIR__ . '/docs.html');
+    exit;
+}
+
 // Только для /register и /login не требуется токен
 if (!in_array($path, ['/register', '/login'])) {
     $headers = getallheaders();
@@ -132,12 +138,6 @@ if ($method === 'POST' && preg_match('#^/events/(\\d+)/attend$#', $path, $matche
 if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matches)) {
     $result = unattend_event($user_id, (int)$matches[1]);
     echo json_encode($result);
-    exit;
-}
-
-if ($method === 'GET' && $path === '/docs') {
-    header('Content-Type: text/html; charset=utf-8');
-    readfile(__DIR__ . '/docs.html');
     exit;
 }
 
