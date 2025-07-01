@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Документация API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+        h1, h2 { color: #2c3e50; }
+        code, pre { background: #eee; padding: 2px 4px; border-radius: 3px; }
+        .endpoint { margin-bottom: 30px; }
+        .method { font-weight: bold; color: #2980b9; }
+        .url { font-family: monospace; }
+        .block { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 20px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <h1>Документация API</h1>
+    <div class="block">
+        <h2>Аутентификация</h2>
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/register</span><br>
+            <b>Тело:</b>
+            <pre>{
+  "email": "user@example.com",
+  "password": "password",
+  "name": "Имя"
+}</pre>
+            <b>Ответ:</b>
+            <pre>{
+  "success": true,
+  "token": "JWT_ТОКЕН",
+  "user": { ... }
+}</pre>
+        </div>
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/login</span><br>
+            <b>Тело:</b>
+            <pre>{
+  "email": "user@example.com",
+  "password": "password"
+}</pre>
+            <b>Ответ:</b>
+            <pre>{
+  "success": true,
+  "token": "JWT_ТОКЕН",
+  "user": { ... }
+}</pre>
+        </div>
+        <p>Для всех остальных запросов требуется заголовок:<br>
+        <code>Authorization: Bearer JWT_ТОКЕН</code></p>
+    </div>
+
+    <div class="block">
+        <h2>Клубы</h2>
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/clubs</span><br>
+            <b>Ответ:</b> список клубов
+        </div>
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/clubs/{id}</span><br>
+            <b>Ответ:</b> подробная информация о клубе
+        </div>
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/clubs/{id}/reviews</span><br>
+            <b>Тело:</b>
+            <pre>{
+  "rating": 5,
+  "review": "Отличное место!"
+}</pre>
+            <b>Ответ:</b> <code>{ "success": true }</code>
+        </div>
+    </div>
+
+    <div class="block">
+        <h2>Мероприятия</h2>
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/events</span><br>
+            <b>Параметры:</b> <code>type_id</code>, <code>date</code>, <code>lat</code>, <code>lng</code>, <code>radius_km</code> (опционально)<br>
+            <b>Ответ:</b> список мероприятий
+        </div>
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/events/{id}</span><br>
+            <b>Ответ:</b> подробная информация о мероприятии
+        </div>
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/events/{id}/attend</span><br>
+            <b>Ответ:</b> <code>{ "success": true }</code>
+        </div>
+        <div class="endpoint">
+            <span class="method">DELETE</span> <span class="url">/events/{id}/attend</span><br>
+            <b>Ответ:</b> <code>{ "success": true }</code>
+        </div>
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/events/{id}/comments</span><br>
+            <b>Тело:</b>
+            <pre>{
+  "comment": "Очень жду!"
+}</pre>
+            <b>Ответ:</b> <code>{ "success": true }</code>
+        </div>
+    </div>
+
+    <div class="block">
+        <h2>Ошибки</h2>
+        <pre>{ "error": "Текст ошибки" }</pre>
+        <p>Если не передан токен или он невалиден — будет ошибка 401.</p>
+    </div>
+</body>
+</html> 

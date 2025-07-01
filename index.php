@@ -135,5 +135,11 @@ if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matc
     exit;
 }
 
+if ($method === 'GET' && $path === '/docs') {
+    header('Content-Type: text/html; charset=utf-8');
+    readfile(__DIR__ . '/docs.html');
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(['error' => 'Not found']); 
