@@ -49,11 +49,11 @@ foreach ($types as $t) {
 
 // Мероприятия
 $events = [
-    [1, 1, 'Большая вечеринка', 'Танцы до утра!', 55.751244, 37.618423, date('Y-m-d 21:00:00'), date('Y-m-d 23:59:59'), 1, 'approved'],
-    [2, 2, 'Живой концерт', 'Выступление группы XYZ', 55.760186, 37.618711, date('Y-m-d 19:00:00'), date('Y-m-d 22:00:00'), 2, 'approved'],
+    [1, 1, 'Большая вечеринка', 'Танцы до утра!', 55.751244, 37.618423, 'Москва', date('Y-m-d 21:00:00'), date('Y-m-d 23:59:59'), 1, 'approved'],
+    [2, 2, 'Живой концерт', 'Выступление группы XYZ', 55.760186, 37.618711, 'Санкт-Петербург', date('Y-m-d 19:00:00'), date('Y-m-d 22:00:00'), 2, 'approved'],
 ];
 foreach ($events as $e) {
-    $stmt = $pdo->prepare('INSERT INTO events (club_id, creator_id, title, description, latitude, longitude, start_time, end_time, type_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO events (club_id, creator_id, title, description, latitude, longitude, city, start_time, end_time, type_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute($e);
 }
 

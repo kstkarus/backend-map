@@ -16,6 +16,10 @@ function get_events($filters = []) {
         $where[] = 'DATE(start_time) = ?';
         $params[] = $filters['date'];
     }
+    if (!empty($filters['city'])) {
+        $where[] = 'city = ?';
+        $params[] = $filters['city'];
+    }
     // Фильтр по расстоянию (если заданы координаты и радиус)
     if (!empty($filters['lat']) && !empty($filters['lng']) && !empty($filters['radius_km'])) {
         $where[] = '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) < ?';

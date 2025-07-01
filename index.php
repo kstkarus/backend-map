@@ -89,6 +89,7 @@ if ($method === 'GET' && $path === '/events') {
     if (isset($_GET['lat'])) $filters['lat'] = (float)$_GET['lat'];
     if (isset($_GET['lng'])) $filters['lng'] = (float)$_GET['lng'];
     if (isset($_GET['radius_km'])) $filters['radius_km'] = (float)$_GET['radius_km'];
+    if (isset($_GET['city'])) $filters['city'] = $_GET['city'];
     $events = get_events($filters);
     echo json_encode(['events' => $events]);
     exit;

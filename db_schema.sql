@@ -57,6 +57,7 @@ CREATE TABLE events (
     description TEXT,
     latitude FLOAT,
     longitude FLOAT,
+    city VARCHAR(100),
     start_time DATETIME NOT NULL,
     end_time DATETIME,
     type_id INT NOT NULL,
