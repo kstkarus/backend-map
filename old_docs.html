@@ -54,7 +54,39 @@
         <h2>Клубы</h2>
         <div class="endpoint">
             <span class="method">GET</span> <span class="url">/clubs</span><br>
-            <b>Ответ:</b> список клубов
+            <b>Ответ:</b> список клубов.<br>
+            <b>Пример:</b>
+            <pre>{
+  "clubs": [
+    {
+      "id": 1,
+      "name": "Night Club X",
+      "description": "Лучший клуб города!",
+      "latitude": 55.751244,
+      "longitude": 37.618423,
+      "rating": 4.5,
+      "created_at": "2024-06-07 12:00:00"
+    },
+    {
+      "id": 2,
+      "name": "Bar Y",
+      "description": "Уютный бар для своих.",
+      "latitude": 55.760186,
+      "longitude": 37.618711,
+      "rating": 4.0,
+      "created_at": "2024-06-07 12:00:00"
+    }
+  ]
+}</pre>
+            <b>Поля:</b>
+            <ul>
+              <li><code>id</code> — идентификатор клуба</li>
+              <li><code>name</code> — название клуба</li>
+              <li><code>description</code> — описание</li>
+              <li><code>latitude</code>, <code>longitude</code> — координаты</li>
+              <li><code>rating</code> — средний рейтинг</li>
+              <li><code>created_at</code> — дата создания</li>
+            </ul>
         </div>
         <div class="endpoint">
             <span class="method">GET</span> <span class="url">/clubs/{id}</span><br>
@@ -76,7 +108,41 @@
         <div class="endpoint">
             <span class="method">GET</span> <span class="url">/events</span><br>
             <b>Параметры:</b> <code>type_id</code>, <code>date</code>, <code>lat</code>, <code>lng</code>, <code>radius_km</code>, <code>city</code> (опционально)<br>
-            <b>Ответ:</b> список мероприятий.
+            <b>Ответ:</b> список мероприятий.<br>
+            <b>Пример:</b>
+            <pre>{
+  "events": [
+    {
+      "id": 1,
+      "club_id": 1,
+      "creator_id": 1,
+      "title": "Большая вечеринка",
+      "description": "Танцы до утра!",
+      "latitude": 55.751244,
+      "longitude": 37.618423,
+      "city": "Москва",
+      "start_time": "2024-06-07 21:00:00",
+      "end_time": "2024-06-07 23:59:59",
+      "type_id": 1,
+      "status": "approved",
+      "created_at": "2024-06-07 12:00:00"
+    }
+  ]
+}</pre>
+            <b>Поля:</b>
+            <ul>
+              <li><code>id</code> — идентификатор мероприятия</li>
+              <li><code>club_id</code> — идентификатор клуба (если есть)</li>
+              <li><code>creator_id</code> — кто создал</li>
+              <li><code>title</code> — название</li>
+              <li><code>description</code> — описание</li>
+              <li><code>latitude</code>, <code>longitude</code> — координаты</li>
+              <li><code>city</code> — город</li>
+              <li><code>start_time</code>, <code>end_time</code> — время проведения</li>
+              <li><code>type_id</code> — тип мероприятия</li>
+              <li><code>status</code> — статус (approved, pending, rejected)</li>
+              <li><code>created_at</code> — дата создания</li>
+            </ul>
         </div>
         <div class="endpoint">
             <span class="method">GET</span> <span class="url">/events/{id}</span><br>

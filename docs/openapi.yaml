@@ -1,0 +1,394 @@
+openapi: 3.0.0
+info:
+  title: PartyMap API
+  version: 1.0.0
+  description: API для просмотра и взаимодействия с мероприятиями и клубами
+servers:
+  - url: https://api.kstk.space
+paths:
+  /register:
+    post:
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /login:
+    post:
+      summary: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /clubs:
+    get:
+      summary: Получить список клубов
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список клубов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clubs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Club'
+  /clubs/{id}:
+    get:
+      summary: Получить информацию о клубе
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Информация о клубе
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  club:
+                    $ref: '#/components/schemas/ClubDetails'
+  /clubs/{id}/reviews:
+    post:
+      summary: Добавить отзыв к клубу
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating, review]
+              properties:
+                rating:
+                  type: integer
+                review:
+                  type: string
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+  /events:
+    get:
+      summary: Получить список мероприятий
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: type_id
+          schema:
+            type: integer
+        - in: query
+          name: date
+          schema:
+            type: string
+        - in: query
+          name: lat
+          schema:
+            type: number
+        - in: query
+          name: lng
+          schema:
+            type: number
+        - in: query
+          name: radius_km
+          schema:
+            type: number
+        - in: query
+          name: city
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список мероприятий
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+  /events/{id}:
+    get:
+      summary: Получить информацию о мероприятии
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Информация о мероприятии
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  event:
+                    $ref: '#/components/schemas/EventDetails'
+  /events/{id}/attend:
+    post:
+      summary: Отметиться "я пойду" на мероприятии
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    delete:
+      summary: Снять отметку "я пойду"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+  /events/{id}/comments:
+    post:
+      summary: Добавить комментарий к мероприятию
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [comment]
+              properties:
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        is_verified:
+          type: integer
+    Club:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        rating:
+          type: number
+        created_at:
+          type: string
+    ClubDetails:
+      allOf:
+        - $ref: '#/components/schemas/Club'
+        - type: object
+          properties:
+            photos:
+              type: array
+              items:
+                type: string
+            reviews:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClubReview'
+    ClubReview:
+      type: object
+      properties:
+        id:
+          type: integer
+        club_id:
+          type: integer
+        user_id:
+          type: integer
+        rating:
+          type: integer
+        review:
+          type: string
+        created_at:
+          type: string
+        user_name:
+          type: string
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        club_id:
+          type: integer
+        creator_id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        city:
+          type: string
+        start_time:
+          type: string
+        end_time:
+          type: string
+        type_id:
+          type: integer
+        status:
+          type: string
+        created_at:
+          type: string
+    EventDetails:
+      allOf:
+        - $ref: '#/components/schemas/Event'
+        - type: object
+          properties:
+            type_name:
+              type: string
+            creator_name:
+              type: string
+            club_name:
+              type: string
+            photos:
+              type: array
+              items:
+                type: string
+            attendees_count:
+              type: integer
+            comments:
+              type: array
+              items:
+                $ref: '#/components/schemas/EventComment'
+    EventComment:
+      type: object
+      properties:
+        id:
+          type: integer
+        event_id:
+          type: integer
+        user_id:
+          type: integer
+        comment:
+          type: string
+        created_at:
+          type: string
+        user_name:
+          type: string
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean 
