@@ -75,12 +75,12 @@
         <h2>Мероприятия</h2>
         <div class="endpoint">
             <span class="method">GET</span> <span class="url">/events</span><br>
-            <b>Параметры:</b> <code>type_id</code>, <code>date</code>, <code>lat</code>, <code>lng</code>, <code>radius_km</code> (опционально)<br>
-            <b>Ответ:</b> список мероприятий
+            <b>Параметры:</b> <code>type_id</code>, <code>date</code>, <code>lat</code>, <code>lng</code>, <code>radius_km</code>, <code>city</code> (опционально)<br>
+            <b>Ответ:</b> список мероприятий. В каждом объекте мероприятия есть поле <code>city</code> (город).
         </div>
         <div class="endpoint">
             <span class="method">GET</span> <span class="url">/events/{id}</span><br>
-            <b>Ответ:</b> подробная информация о мероприятии
+            <b>Ответ:</b> подробная информация о мероприятии (в том числе <code>city</code>).
         </div>
         <div class="endpoint">
             <span class="method">POST</span> <span class="url">/events/{id}/attend</span><br>
