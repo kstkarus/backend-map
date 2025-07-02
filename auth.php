@@ -4,6 +4,11 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/utils.php';
 
+function generate_token() {
+    // Генерация случайного токена (UUID v4)
+    return bin2hex(random_bytes(16));
+}
+
 function register_user($email, $password, $name) {
     $db = new Database();
     $pdo = $db->getPdo();
@@ -17,7 +22,11 @@ function register_user($email, $password, $name) {
     $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, is_verified) VALUES (?, ?, ?, 0)');
     $stmt->execute([$email, $hash, $name]);
     $user_id = $pdo->lastInsertId();
-    $token = create_jwt(['user_id' => $user_id, 'email' => $email, 'name' => $name]);
+    $token = generate_token();
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+    $stmt = $pdo->prepare('INSERT INTO sessions (user_id, token, user_agent, ip_address) VALUES (?, ?, ?, ?)');
+    $stmt->execute([$user_id, $token, $user_agent, $ip]);
     return [
         'success' => true,
         'token' => $token,
@@ -40,7 +49,11 @@ function login_user($email, $password) {
     if (!$user || !password_verify($password, $user['password_hash'])) {
         return ['error' => 'Неверный email или пароль'];
     }
-    $token = create_jwt(['user_id' => $user['id'], 'email' => $email, 'name' => $user['name']]);
+    $token = generate_token();
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+    $stmt = $pdo->prepare('INSERT INTO sessions (user_id, token, user_agent, ip_address) VALUES (?, ?, ?, ?)');
+    $stmt->execute([$user['id'], $token, $user_agent, $ip]);
     return [
         'success' => true,
         'token' => $token,

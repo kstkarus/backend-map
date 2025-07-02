@@ -15,5 +15,40 @@
     <script src="./swagger-ui-bundle.js" charset="UTF-8"> </script>
     <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
     <script src="./swagger-initializer.js" charset="UTF-8"> </script>
+    <div class="block">
+        <h2>Сессии пользователя</h2>
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/sessions</span><br>
+            <b>Описание:</b> Получить список всех сессий пользователя (устройств, где выполнен вход).<br>
+            <b>Ответ:</b>
+            <pre>{
+  "sessions": [
+    {
+      "id": 1,
+      "user_agent": "Mozilla/5.0 ...",
+      "ip_address": "192.168.1.1",
+      "created_at": "2024-06-07 12:00:00",
+      "last_active": "2024-06-07 12:30:00",
+      "is_active": 1
+    },
+    ...
+  ]
+}</pre>
+            <b>Поля:</b>
+            <ul>
+              <li><code>id</code> — идентификатор сессии</li>
+              <li><code>user_agent</code> — браузер/устройство</li>
+              <li><code>ip_address</code> — IP-адрес</li>
+              <li><code>created_at</code> — когда был выполнен вход</li>
+              <li><code>last_active</code> — последнее действие</li>
+              <li><code>is_active</code> — активна ли сессия (1 — да, 0 — нет)</li>
+            </ul>
+        </div>
+        <div class="endpoint">
+            <span class="method">DELETE</span> <span class="url">/sessions/{id}</span><br>
+            <b>Описание:</b> Завершить (отозвать) конкретную сессию пользователя.<br>
+            <b>Ответ:</b> <code>{ "success": true }</code>
+        </div>
+    </div>
   </body>
 </html>

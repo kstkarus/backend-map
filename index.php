@@ -9,31 +9,27 @@ require_once __DIR__ . '/events.php';
 require_once __DIR__ . '/comments.php';
 require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/attendees.php';
+require_once __DIR__ . '/sessions.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-if ($method === 'GET' && $path === '/docs') {
-    header('Content-Type: text/html; charset=utf-8');
-    readfile(__DIR__ . '/docs.html');
-    exit;
-}
 
-// Только для /register и /login не требуется токен
-if (!in_array($path, ['/register', '/login'])) {
+
+// Только для /register и /login и /docs не требуется токен
+if (!in_array($path, ['/register', '/login', '/docs'])) {
     $headers = getallheaders();
     $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
     if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {
-        $jwt = $matches[1];
-        $payload = verify_jwt($jwt);
-        if (!$payload) {
+        $token = $matches[1];
+        $session = verify_session_token($token);
+        if (!$session) {
             http_response_code(401);
             echo json_encode(['error' => 'Неверный или просроченный токен']);
             exit;
         }
-        // user_id и user доступны для дальнейших действий
-        $user_id = $payload['user_id'];
-        $user_payload = $payload;
+        $user_id = $session['user_id'];
+        $session_id = $session['id'];
     } else {
         http_response_code(401);
         echo json_encode(['error' => 'Требуется токен авторизации']);
@@ -138,6 +134,18 @@ if ($method === 'POST' && preg_match('#^/events/(\\d+)/attend$#', $path, $matche
 
 if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matches)) {
     $result = unattend_event($user_id, (int)$matches[1]);
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'GET' && $path === '/sessions') {
+    $sessions = get_user_sessions($user_id);
+    echo json_encode(['sessions' => $sessions]);
+    exit;
+}
+
+if ($method === 'DELETE' && preg_match('#^/sessions/(\\d+)$#', $path, $matches)) {
+    $result = delete_session($user_id, (int)$matches[1]);
     echo json_encode($result);
     exit;
 }

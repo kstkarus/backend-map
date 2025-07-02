@@ -36,4 +36,17 @@ function verify_jwt($jwt) {
     $payload = json_decode(base64url_decode($payload64), true);
     if (!$payload || !isset($payload['exp']) || $payload['exp'] < time()) return false;
     return $payload;
+}
+
+function verify_session_token($token) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $stmt = $pdo->prepare('SELECT * FROM sessions WHERE token = ? AND is_active = 1');
+    $stmt->execute([$token]);
+    $session = $stmt->fetch();
+    if (!$session) return false;
+    // Обновляем last_active
+    $stmt = $pdo->prepare('UPDATE sessions SET last_active = NOW() WHERE id = ?');
+    $stmt->execute([$session['id']]);
+    return $session;
 } 
