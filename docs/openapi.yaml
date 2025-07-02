@@ -246,6 +246,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+  /sessions:
+    get:
+      summary: Получить список сессий пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список сессий
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+  /sessions/{id}:
+    delete:
+      summary: Завершить (отозвать) сессию пользователя
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -391,4 +426,19 @@ components:
       type: object
       properties:
         success:
-          type: boolean 
+          type: boolean
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_agent:
+          type: string
+        ip_address:
+          type: string
+        created_at:
+          type: string
+        last_active:
+          type: string
+        is_active:
+          type: integer 
