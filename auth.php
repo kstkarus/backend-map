@@ -9,7 +9,7 @@ function generate_token() {
     return bin2hex(random_bytes(16));
 }
 
-function register_user($email, $password, $name) {
+function register_user($email, $password, $name, $city, $birthdate, $phone = null) {
     $db = new Database();
     $pdo = $db->getPdo();
     // Проверка на существование email
@@ -19,8 +19,8 @@ function register_user($email, $password, $name) {
         return ['error' => 'Пользователь с таким email уже существует'];
     }
     $hash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, is_verified) VALUES (?, ?, ?, 0)');
-    $stmt->execute([$email, $hash, $name]);
+    $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, city, birthdate, phone, is_verified) VALUES (?, ?, ?, ?, ?, ?, 0)');
+    $stmt->execute([$email, $hash, $name, $city, $birthdate, $phone]);
     $user_id = $pdo->lastInsertId();
     $token = generate_token();
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
@@ -34,6 +34,9 @@ function register_user($email, $password, $name) {
             'id' => $user_id,
             'name' => $name,
             'email' => $email,
+            'city' => $city,
+            'birthdate' => $birthdate,
+            'phone' => $phone,
             'role' => 'user',
             'is_verified' => 0,
         ]

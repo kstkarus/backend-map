@@ -39,12 +39,12 @@ if (!in_array($path, ['/register', '/login', '/docs'])) {
 
 if ($method === 'POST' && $path === '/register') {
     $data = json_decode(file_get_contents('php://input'), true);
-    if (!isset($data['email'], $data['password'], $data['name'])) {
+    if (!isset($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Необходимы email, password и name']);
+        echo json_encode(['error' => 'Необходимы email, password, name, city, birthdate']);
         exit;
     }
-    $result = register_user($data['email'], $data['password'], $data['name']);
+    $result = register_user($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'], $data['phone'] ?? null);
     echo json_encode($result);
     exit;
 }

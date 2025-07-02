@@ -15,7 +15,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, password, name]
+              required: [email, password, name, city, birthdate]
               properties:
                 email:
                   type: string
@@ -23,6 +23,14 @@ paths:
                   type: string
                 name:
                   type: string
+                city:
+                  type: string
+                birthdate:
+                  type: string
+                  format: date
+                phone:
+                  type: string
+                  nullable: true
       responses:
         '200':
           description: Успешная регистрация
@@ -306,6 +314,14 @@ components:
           type: string
         email:
           type: string
+        city:
+          type: string
+        birthdate:
+          type: string
+          format: date
+        phone:
+          type: string
+          nullable: true
         role:
           type: string
         is_verified:

@@ -21,12 +21,12 @@ $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
 
 // Пользователи
 $users = [
-    ['user1@example.com', password_hash('password1', PASSWORD_DEFAULT), 'Иван', 'user'],
-    ['user2@example.com', password_hash('password2', PASSWORD_DEFAULT), 'Мария', 'user'],
-    ['admin@example.com', password_hash('adminpass', PASSWORD_DEFAULT), 'Админ', 'admin'],
+    ['user1@example.com', password_hash('password1', PASSWORD_DEFAULT), 'Иван', 'Москва', '2000-01-01', '+79991111111', 'user'],
+    ['user2@example.com', password_hash('password2', PASSWORD_DEFAULT), 'Мария', 'Санкт-Петербург', '1995-05-10', null, 'user'],
+    ['admin@example.com', password_hash('adminpass', PASSWORD_DEFAULT), 'Админ', 'Москва', '1990-12-31', null, 'admin'],
 ];
 foreach ($users as $u) {
-    $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, role, is_verified) VALUES (?, ?, ?, ?, 1)');
+    $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, city, birthdate, phone, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, 1)');
     $stmt->execute($u);
 }
 
