@@ -98,7 +98,6 @@ if ($method === 'GET' && $path === '/me') {
         exit;
     }
     
-    // Формируем ответ в том же формате, что и при входе/регистрации
     $response = [
         'success' => true,
         'token' => $session['token'],
@@ -115,18 +114,6 @@ if ($method === 'GET' && $path === '/me') {
     ];
     
     echo json_encode($response);
-    exit;
-}
-
-if ($method === 'GET' && preg_match('#^/users/([^/]+)$#', $path, $matches)) {
-    $uuid = $matches[1];
-    $user = get_user_by_uuid($uuid);
-    if (!$user) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Пользователь не найден']);
-        exit;
-    }
-    echo json_encode(['user' => $user]);
     exit;
 }
 

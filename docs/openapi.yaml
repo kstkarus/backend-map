@@ -130,37 +130,6 @@ paths:
                 properties:
                   error:
                     type: string
-  /users/{uuid}:
-    get:
-      summary: Получить данные пользователя по UUID
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: uuid
-          required: true
-          schema:
-            type: string
-          description: UUID пользователя
-      responses:
-        '200':
-          description: Данные пользователя
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        '404':
-          description: Пользователь не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
   /clubs:
     get:
       summary: Получить список клубов
