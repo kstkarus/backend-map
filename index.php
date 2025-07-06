@@ -41,10 +41,23 @@ if ($method === 'POST' && $path === '/register') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (!isset($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Необходимы email, password, name, city, birthdate']);
+        echo json_encode([
+            'error' => 'Необходимы email, password, name, city, birthdate',
+            'errors' => [
+                'email' => 'Email обязателен для заполнения',
+                'password' => 'Пароль обязателен для заполнения',
+                'name' => 'Имя обязательно для заполнения',
+                'city' => 'Город обязателен для заполнения',
+                'birthdate' => 'Дата рождения обязательна для заполнения'
+            ]
+        ]);
         exit;
     }
     $result = register_user($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'], $data['phone'] ?? null);
+    
+    if (isset($result['error'])) {
+        http_response_code(400);
+    }
     echo json_encode($result);
     exit;
 }
@@ -53,11 +66,50 @@ if ($method === 'POST' && $path === '/login') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (!isset($data['email'], $data['password'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Необходимы email и password']);
+        echo json_encode([
+            'error' => 'Необходимы email и password',
+            'errors' => [
+                'email' => 'Email обязателен для заполнения',
+                'password' => 'Пароль обязателен для заполнения'
+            ]
+        ]);
         exit;
     }
     $result = login_user($data['email'], $data['password']);
+    
+    if (isset($result['error'])) {
+        http_response_code(400);
+    }
     echo json_encode($result);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/logout') {
+    $result = logout_user($session_id);
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'GET' && $path === '/me') {
+    $user = get_user_by_id($user_id);
+    if (!$user) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Пользователь не найден']);
+        exit;
+    }
+    echo json_encode(['user' => $user]);
+    exit;
+}
+
+if ($method === 'GET' && preg_match('#^/users/([^/]+)$#', $path, $matches)) {
+    $uuid = $matches[1];
+    $user = get_user_by_uuid($uuid);
+    if (!$user) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Пользователь не найден']);
+        exit;
+    }
+    echo json_encode(['user' => $user]);
     exit;
 }
 

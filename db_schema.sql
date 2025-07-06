@@ -4,14 +4,26 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    birthdate DATE NOT NULL,
-    phone VARCHAR(32),
     role ENUM('user', 'organizer', 'admin') DEFAULT 'user',
     social_id VARCHAR(255),
     social_type VARCHAR(50),
     is_verified BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица сессий пользователей
+CREATE TABLE sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    user_agent VARCHAR(255),
+    ip_address VARCHAR(45),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_active TINYINT(1) DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_token (token)
 );
 
 -- Таблица клубов
@@ -98,18 +110,5 @@ CREATE TABLE event_comments (
     comment TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Сессии пользователей
-CREATE TABLE sessions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    token VARCHAR(255) NOT NULL,
-    user_agent VARCHAR(255),
-    ip_address VARCHAR(45),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ); 

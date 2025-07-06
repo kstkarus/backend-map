@@ -19,18 +19,31 @@ paths:
               properties:
                 email:
                   type: string
+                  format: email
+                  description: Email адрес пользователя
                 password:
                   type: string
+                  minLength: 8
+                  maxLength: 128
+                  description: Пароль (минимум 8 символов, должен содержать буквы и цифры)
                 name:
                   type: string
+                  minLength: 2
+                  maxLength: 255
+                  description: Имя пользователя
                 city:
                   type: string
+                  minLength: 2
+                  maxLength: 100
+                  description: Город пользователя
                 birthdate:
                   type: string
                   format: date
+                  description: Дата рождения в формате YYYY-MM-DD
                 phone:
                   type: string
                   nullable: true
+                  description: Номер телефона (опционально)
       responses:
         '200':
           description: Успешная регистрация
@@ -38,6 +51,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
   /login:
     post:
       summary: Авторизация пользователя
@@ -51,8 +70,11 @@ paths:
               properties:
                 email:
                   type: string
+                  format: email
+                  description: Email адрес пользователя
                 password:
                   type: string
+                  description: Пароль пользователя
       responses:
         '200':
           description: Успешная авторизация
@@ -60,6 +82,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Ошибка валидации или неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /logout:
+    post:
+      summary: Выход из аккаунта
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+  /me:
+    get:
+      summary: Получить данные текущего пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /users/{uuid}:
+    get:
+      summary: Получить данные пользователя по UUID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema:
+            type: string
+          description: UUID пользователя
+      responses:
+        '200':
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /clubs:
     get:
       summary: Получить список клубов
@@ -316,16 +411,29 @@ components:
           type: string
         city:
           type: string
+          nullable: true
         birthdate:
           type: string
           format: date
+          nullable: true
         phone:
           type: string
           nullable: true
         role:
           type: string
+          enum: [user, organizer, admin]
+        social_id:
+          type: string
+          nullable: true
+          description: UUID пользователя
+        social_type:
+          type: string
+          nullable: true
         is_verified:
           type: integer
+        created_at:
+          type: string
+          format: date-time
     Club:
       type: object
       properties:
@@ -457,4 +565,23 @@ components:
         last_active:
           type: string
         is_active:
-          type: integer 
+          type: integer
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Общее сообщение об ошибке
+        errors:
+          type: object
+          description: Детальные ошибки по полям
+          additionalProperties:
+            type: string
+          example:
+            email: "Email обязателен для заполнения"
+            password: "Пароль должен содержать минимум 8 символов"
+            name: "Имя должно содержать минимум 2 символа"
+            city: "Город обязателен для заполнения"
+            birthdate: "Введите корректную дату в формате ГГГГ-ММ-ДД"
+            phone: "Введите корректный номер телефона"
+            auth: "Проверьте правильность email и пароля" 
