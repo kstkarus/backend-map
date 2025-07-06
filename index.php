@@ -97,7 +97,23 @@ if ($method === 'GET' && $path === '/me') {
         echo json_encode(['error' => 'Пользователь не найден']);
         exit;
     }
-    echo json_encode(['user' => $user]);
+    
+    // Формируем ответ в том же формате, что и при входе/регистрации
+    $response = [
+        'success' => true,
+        'user' => [
+            'id' => $user['id'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'city' => $user['city'],
+            'birthdate' => $user['birthdate'],
+            'phone' => $user['phone'],
+            'role' => $user['role'],
+            'is_verified' => $user['is_verified']
+        ]
+    ];
+    
+    echo json_encode($response);
     exit;
 }
 

@@ -146,7 +146,7 @@ function login_user($email, $password) {
 function get_user_by_id($user_id) {
     $db = new Database();
     $pdo = $db->getPdo();
-    $stmt = $pdo->prepare('SELECT id, email, name, role, social_id, social_type, is_verified, created_at FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, email, name, city, birthdate, phone, role, social_id, social_type, is_verified, created_at FROM users WHERE id = ?');
     $stmt->execute([$user_id]);
     return $stmt->fetch();
 }
