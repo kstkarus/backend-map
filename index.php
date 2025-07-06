@@ -101,6 +101,7 @@ if ($method === 'GET' && $path === '/me') {
     // Формируем ответ в том же формате, что и при входе/регистрации
     $response = [
         'success' => true,
+        'token' => $session['token'],
         'user' => [
             'id' => $user['id'],
             'name' => $user['name'],
