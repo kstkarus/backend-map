@@ -14,31 +14,28 @@ require_once __DIR__ . '/sessions.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-
-
-// Только для /register и /login и /docs не требуется токен
-if (!in_array($path, ['/register', '/login', '/docs'])) {
-    $headers = getallheaders();
-    $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
-    if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {
-        $token = $matches[1];
-        $session = verify_session_token($token);
-        if (!$session) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Неверный или просроченный токен']);
-            exit;
-        }
-        $user_id = $session['user_id'];
-        $session_id = $session['id'];
-    } else {
+// --- JWT Middleware ---
+$public_paths = ['/register', '/login', '/docs', '/token/refresh'];
+if (!in_array($path, $public_paths)) {
+    $token = get_bearer_token();
+    $jwt_payload = $token ? verify_jwt($token) : false;
+    if (!$jwt_payload) {
         http_response_code(401);
-        echo json_encode(['error' => 'Требуется токен авторизации']);
+        echo json_encode(['error' => 'Неверный или просроченный access token']);
         exit;
     }
+    $user_id = $jwt_payload['user_id'];
 }
 
+// --- Регистрация ---
 if ($method === 'POST' && $path === '/register') {
     $data = json_decode(file_get_contents('php://input'), true);
+    $device_id = $data['device_id'] ?? null;
+    if (!$device_id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'device_id обязателен']);
+        exit;
+    }
     if (!isset($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'])) {
         http_response_code(400);
         echo json_encode([
@@ -53,7 +50,7 @@ if ($method === 'POST' && $path === '/register') {
         ]);
         exit;
     }
-    $result = register_user($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'], $data['phone'] ?? null);
+    $result = register_user($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'], $data['phone'] ?? null, $device_id);
     
     if (isset($result['error'])) {
         http_response_code(400);
@@ -62,8 +59,15 @@ if ($method === 'POST' && $path === '/register') {
     exit;
 }
 
+// --- Логин ---
 if ($method === 'POST' && $path === '/login') {
     $data = json_decode(file_get_contents('php://input'), true);
+    $device_id = $data['device_id'] ?? null;
+    if (!$device_id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'device_id обязателен']);
+        exit;
+    }
     if (!isset($data['email'], $data['password'])) {
         http_response_code(400);
         echo json_encode([
@@ -75,7 +79,7 @@ if ($method === 'POST' && $path === '/login') {
         ]);
         exit;
     }
-    $result = login_user($data['email'], $data['password']);
+    $result = login_user($data['email'], $data['password'], $device_id);
     
     if (isset($result['error'])) {
         http_response_code(400);
@@ -84,12 +88,68 @@ if ($method === 'POST' && $path === '/login') {
     exit;
 }
 
+// --- Logout (по refresh token из cookie) ---
 if ($method === 'POST' && $path === '/logout') {
-    $result = logout_user($session_id);
+    $refresh_token = $_COOKIE['refresh_token'] ?? null;
+    $device_id = $_POST['device_id'] ?? ($_GET['device_id'] ?? null);
+    if (!$refresh_token || !$device_id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Нет refresh token или device_id']);
+        exit;
+    }
+    $result = logout_user_by_refresh($refresh_token, $device_id);
     echo json_encode($result);
     exit;
 }
 
+// --- Endpoint для обновления access/refresh токенов ---
+if ($method === 'POST' && $path === '/token/refresh') {
+    $refresh_token = $_COOKIE['refresh_token'] ?? null;
+    $data = json_decode(file_get_contents('php://input'), true);
+    $device_id = $data['device_id'] ?? null;
+    if (!$refresh_token || !$device_id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Нет refresh token или device_id']);
+        exit;
+    }
+    $token_row = get_refresh_token($refresh_token, $device_id);
+    if (!$token_row || strtotime($token_row['expires_at']) < time()) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Refresh token невалиден или истёк']);
+        exit;
+    }
+    deactivate_refresh_token($refresh_token, $device_id);
+    $user_id = $token_row['user_id'];
+    $user = get_user_by_id($user_id);
+    if (!$user) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Пользователь не найден']);
+        exit;
+    }
+    $access_payload = [
+        'user_id' => $user['id'],
+        'email' => $user['email'],
+        'role' => $user['role'],
+        'is_verified' => $user['is_verified']
+    ];
+    $access_token = create_jwt($access_payload, 900); // 15 минут
+    $new_refresh_token = generate_refresh_token();
+    $refresh_expires = date('Y-m-d H:i:s', time() + 60*60*24*14); // 14 дней
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+    save_refresh_token($user_id, $new_refresh_token, $refresh_expires, $user_agent, $ip, $device_id);
+    setcookie('refresh_token', $new_refresh_token, [
+        'expires' => strtotime($refresh_expires),
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'path' => '/',
+        'secure' => isset($_SERVER['HTTPS'])
+    ]);
+    echo json_encode(['access_token' => $access_token]);
+    exit;
+}
+
+// --- /me ---
 if ($method === 'GET' && $path === '/me') {
     $user = get_user_by_id($user_id);
     if (!$user) {
@@ -97,10 +157,8 @@ if ($method === 'GET' && $path === '/me') {
         echo json_encode(['error' => 'Пользователь не найден']);
         exit;
     }
-    
     $response = [
         'success' => true,
-        'token' => $session['token'],
         'user' => [
             'id' => $user['id'],
             'name' => $user['name'],
@@ -112,7 +170,6 @@ if ($method === 'GET' && $path === '/me') {
             'is_verified' => $user['is_verified']
         ]
     ];
-    
     echo json_encode($response);
     exit;
 }
@@ -190,18 +247,6 @@ if ($method === 'POST' && preg_match('#^/events/(\\d+)/attend$#', $path, $matche
 
 if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matches)) {
     $result = unattend_event($user_id, (int)$matches[1]);
-    echo json_encode($result);
-    exit;
-}
-
-if ($method === 'GET' && $path === '/sessions') {
-    $sessions = get_user_sessions($user_id);
-    echo json_encode(['sessions' => $sessions]);
-    exit;
-}
-
-if ($method === 'DELETE' && preg_match('#^/sessions/(\\d+)$#', $path, $matches)) {
-    $result = delete_session($user_id, (int)$matches[1]);
     echo json_encode($result);
     exit;
 }

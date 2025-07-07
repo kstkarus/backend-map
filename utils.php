@@ -38,15 +38,11 @@ function verify_jwt($jwt) {
     return $payload;
 }
 
-function verify_session_token($token) {
-    $db = new Database();
-    $pdo = $db->getPdo();
-    $stmt = $pdo->prepare('SELECT * FROM sessions WHERE token = ? AND is_active = 1');
-    $stmt->execute([$token]);
-    $session = $stmt->fetch();
-    if (!$session) return false;
-    // Обновляем last_active
-    $stmt = $pdo->prepare('UPDATE sessions SET last_active = NOW() WHERE id = ?');
-    $stmt->execute([$session['id']]);
-    return $session;
+function get_bearer_token() {
+    $headers = getallheaders();
+    $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
+    if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {
+        return $matches[1];
+    }
+    return null;
 } 

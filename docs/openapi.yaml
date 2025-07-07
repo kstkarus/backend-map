@@ -47,6 +47,11 @@ paths:
       responses:
         '200':
           description: Успешная регистрация
+          headers:
+            Set-Cookie:
+              description: 'HttpOnly cookie с refresh token'
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -78,6 +83,11 @@ paths:
       responses:
         '200':
           description: Успешная авторизация
+          headers:
+            Set-Cookie:
+              description: 'HttpOnly cookie с refresh token'
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -90,16 +100,47 @@ paths:
                 $ref: '#/components/schemas/ValidationError'
   /logout:
     post:
-      summary: Выход из аккаунта
-      security:
-        - bearerAuth: []
+      summary: Выход из аккаунта (деактивация refresh token)
+      description: |
+        Требует refresh token в httpOnly cookie. Очищает cookie и деактивирует refresh token в базе.
       responses:
         '200':
           description: Успешный выход
+          headers:
+            Set-Cookie:
+              description: 'Очищает refresh_token cookie'
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+  /token/refresh:
+    post:
+      summary: Обновление access/refresh токенов
+      description: |
+        Требует refresh token в httpOnly cookie. Возвращает новый access token и обновляет refresh token (ротация).
+      responses:
+        '200':
+          description: Новая пара токенов
+          headers:
+            Set-Cookie:
+              description: 'HttpOnly cookie с новым refresh token'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          description: Refresh token невалиден или истёк
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /me:
     get:
       summary: Получить данные текущего пользователя
@@ -111,7 +152,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
+                $ref: '#/components/schemas/UserResponse'
         '401':
           description: Неавторизован
           content:
@@ -371,8 +412,22 @@ components:
       properties:
         success:
           type: boolean
-        token:
+        access_token:
           type: string
+          description: JWT access token (15 минут)
+        user:
+          $ref: '#/components/schemas/User'
+    RefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: Новый access token (JWT)
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
         user:
           $ref: '#/components/schemas/User'
     User:
