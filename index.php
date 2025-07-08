@@ -17,19 +17,18 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 
 // Только для /register и /login и /docs не требуется токен
-if (!in_array($path, ['/register', '/login', '/docs'])) {
+if (!in_array($path, ['/register', '/login', '/docs', '/cities'])) {
     $headers = getallheaders();
     $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
     if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {
         $token = $matches[1];
-        $session = verify_session_token($token);
+        $session = verify_jwt($token);
         if (!$session) {
             http_response_code(401);
             echo json_encode(['error' => 'Неверный или просроченный токен']);
             exit;
         }
         $user_id = $session['user_id'];
-        $session_id = $session['id'];
     } else {
         http_response_code(401);
         echo json_encode(['error' => 'Требуется токен авторизации']);
