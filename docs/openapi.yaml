@@ -58,6 +58,8 @@ paths:
   /login:
     post:
       summary: Авторизация пользователя
+      tags:
+        - auth
       requestBody:
         required: true
         content:
@@ -93,7 +95,9 @@ paths:
                 $ref: '#/components/schemas/ValidationError'
   /logout:
     post:
-      summary: Выход из аккаунта (деактивация refresh token)
+      summary: Выход из аккаунта
+      tags:
+        - auth
       description: |
         Требует refresh token в httpOnly cookie. Очищает cookie и деактивирует refresh token в базе.
       responses:
@@ -111,6 +115,8 @@ paths:
   /token/refresh:
     post:
       summary: Обновление access/refresh токенов
+      tags:
+        - auth
       description: |
         Требует refresh token в httpOnly cookie. Возвращает новый access token и обновляет refresh token (ротация).
       responses:
@@ -137,6 +143,8 @@ paths:
   /me:
     get:
       summary: Получить данные текущего пользователя
+      tags:
+        - user
       security:
         - bearerAuth: []
       responses:
@@ -208,6 +216,8 @@ paths:
   /clubs:
     get:
       summary: Получить список клубов
+      tags:
+        - clubs
       security:
         - bearerAuth: []
       responses:
@@ -225,6 +235,8 @@ paths:
   /clubs/{id}:
     get:
       summary: Получить информацию о клубе
+      tags:
+        - clubs
       security:
         - bearerAuth: []
       parameters:
@@ -246,6 +258,8 @@ paths:
   /clubs/{id}/reviews:
     post:
       summary: Добавить отзыв к клубу
+      tags:
+        - clubs
       security:
         - bearerAuth: []
       parameters:
@@ -276,6 +290,8 @@ paths:
   /events:
     get:
       summary: Получить список мероприятий
+      tags:
+        - events
       security:
         - bearerAuth: []
       parameters:
@@ -318,6 +334,8 @@ paths:
   /events/{id}:
     get:
       summary: Получить информацию о мероприятии
+      tags:
+        - events
       security:
         - bearerAuth: []
       parameters:
@@ -339,6 +357,8 @@ paths:
   /events/{id}/attend:
     post:
       summary: Отметиться "я пойду" на мероприятии
+      tags:
+        - events
       security:
         - bearerAuth: []
       parameters:
@@ -356,6 +376,8 @@ paths:
                 $ref: '#/components/schemas/SuccessResponse'
     delete:
       summary: Снять отметку "я пойду"
+      tags:
+        - events
       security:
         - bearerAuth: []
       parameters:
@@ -374,6 +396,8 @@ paths:
   /events/{id}/comments:
     post:
       summary: Добавить комментарий к мероприятию
+      tags:
+        - events
       security:
         - bearerAuth: []
       parameters:
