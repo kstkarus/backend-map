@@ -258,7 +258,7 @@ if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matc
 if ($method === 'GET' && $path === '/refresh-tokens') {
     $db = new Database();
     $pdo = $db->getPdo();
-    $stmt = $pdo->prepare('SELECT id, device_id, user_agent, ip_address, created_at, expires_at, is_active FROM refresh_tokens WHERE user_id = ?');
+    $stmt = $pdo->prepare('SELECT id, device_id, user_agent, ip_address, created_at, expires_at, is_active FROM refresh_tokens WHERE user_id = ? AND is_active = 1');
     $stmt->execute([$user_id]);
     $tokens = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode(['refresh_tokens' => $tokens]);
