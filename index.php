@@ -61,7 +61,8 @@ if ($method === 'POST' && $path === '/register') {
             exit;
         }
     }
-    $result = register_user($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'], $data['phone'] ?? null);
+    $device_id = $data['device_id'] ?? '';
+    $result = register_user($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'], $data['phone'] ?? null, $device_id);
     
     if (isset($result['error'])) {
         http_response_code(400);
@@ -83,7 +84,8 @@ if ($method === 'POST' && $path === '/login') {
         ]);
         exit;
     }
-    $result = login_user($data['email'], $data['password']);
+    $device_id = $data['device_id'] ?? '';
+    $result = login_user($data['email'], $data['password'], $device_id);
     
     if (isset($result['error'])) {
         http_response_code(400);
