@@ -255,8 +255,12 @@ if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matc
     exit;
 }
 
-if ($method === 'GET' && $path === '/my-events') {
-    $events = get_user_events($user_id);
+if ($method === 'GET' && $path === '/events/attending') {
+    $filters = [];
+    if (isset($_GET['type_id'])) $filters['type_id'] = (int)$_GET['type_id'];
+    if (isset($_GET['date'])) $filters['date'] = $_GET['date'];
+    if (isset($_GET['city'])) $filters['city'] = $_GET['city'];
+    $events = get_user_events($user_id, $filters);
     echo json_encode(['events' => $events]);
     exit;
 }

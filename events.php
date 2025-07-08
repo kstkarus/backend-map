@@ -65,11 +65,30 @@ function get_event($event_id) {
     return $event;
 }
 
-function get_user_events($user_id) {
+function get_user_events($user_id, $filters = []) {
     $db = new Database();
     $pdo = $db->getPdo();
-    $stmt = $pdo->prepare('SELECT e.* FROM events e JOIN event_attendees a ON a.event_id = e.id WHERE a.user_id = ? AND e.status = "approved" ORDER BY e.start_time ASC');
-    $stmt->execute([$user_id]);
+    $where = ['a.user_id = ?','e.status = "approved"'];
+    $params = [$user_id];
+    if (!empty($filters['type_id'])) {
+        $where[] = 'e.type_id = ?';
+        $params[] = $filters['type_id'];
+    }
+    if (!empty($filters['date'])) {
+        $where[] = 'DATE(e.start_time) = ?';
+        $params[] = $filters['date'];
+    }
+    if (!empty($filters['city'])) {
+        $where[] = 'e.city = ?';
+        $params[] = $filters['city'];
+    }
+    $sql = 'SELECT e.* FROM events e JOIN event_attendees a ON a.event_id = e.id';
+    if ($where) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $sql .= ' ORDER BY e.start_time ASC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $events = $stmt->fetchAll();
     return $events;
 } 

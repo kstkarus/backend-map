@@ -423,13 +423,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-  /my-events:
+  /events/attending:
     get:
       summary: Получить мероприятия, на которые записан текущий пользователь
       tags:
         - events
       security:
         - bearerAuth: []
+      parameters:
+        - in: query
+          name: type_id
+          schema:
+            type: integer
+        - in: query
+          name: date
+          schema:
+            type: string
+        - in: query
+          name: city
+          schema:
+            type: string
       responses:
         '200':
           description: Список мероприятий пользователя
