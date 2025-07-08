@@ -48,28 +48,20 @@ function get_refresh_token($token, $device_id = null) {
 }
 
 // --- Регистрация пользователя ---
-function register_user($email, $password, $name, $city, $birthdate, $phone = null, $device_id = '') {
-    // Валидация входных данных
+function register_user($email, $password, $name = null, $city = null, $birthdate = null, $phone = null, $device_id = '') {
+    // Валидация только email и пароля
     $validation = validate_registration_data([
         'email' => $email,
-        'password' => $password,
-        'name' => $name,
-        'city' => $city,
-        'birthdate' => $birthdate,
-        'phone' => $phone
+        'password' => $password
     ]);
-    
     if (!$validation['valid']) {
         return [
             'error' => $validation['message'],
             'errors' => $validation['errors']
         ];
     }
-    
     $db = new Database();
     $pdo = $db->getPdo();
-    
-    // Проверка на существование email
     $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
     $stmt->execute([$email]);
     if ($stmt->fetch()) {
@@ -78,8 +70,6 @@ function register_user($email, $password, $name, $city, $birthdate, $phone = nul
             'errors' => ['email' => 'Этот email уже используется']
         ];
     }
-    
-    // Очистка телефона если он предоставлен
     $clean_phone = null;
     if (!empty($phone)) {
         $phone_validation = validate_phone($phone);
@@ -87,15 +77,19 @@ function register_user($email, $password, $name, $city, $birthdate, $phone = nul
             $clean_phone = $phone_validation['clean_phone'];
         }
     }
-    
     try {
         $pdo->beginTransaction();
-        
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, city, birthdate, phone, is_verified) VALUES (?, ?, ?, ?, ?, ?, 0)');
-        $stmt->execute([$email, $hash, $name, $city, $birthdate, $clean_phone]);
+        $stmt->execute([
+            $email,
+            $hash,
+            $name,
+            $city,
+            $birthdate,
+            $clean_phone
+        ]);
         $user_id = $pdo->lastInsertId();
-        
         // --- JWT ---
         $access_payload = [
             'user_id' => $user_id,
@@ -109,10 +103,7 @@ function register_user($email, $password, $name, $city, $birthdate, $phone = nul
         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         $ip = $_SERVER['REMOTE_ADDR'] ?? null;
         save_refresh_token($user_id, $refresh_token, $refresh_expires, $user_agent, $ip, $device_id);
-        
         $pdo->commit();
-        
-        // Устанавливаем refresh token в httpOnly cookie
         setcookie('refresh_token', $refresh_token, [
             'expires' => strtotime($refresh_expires),
             'httponly' => true,
@@ -120,7 +111,6 @@ function register_user($email, $password, $name, $city, $birthdate, $phone = nul
             'path' => '/',
             'secure' => isset($_SERVER['HTTPS'])
         ]);
-        
         return [
             'success' => true,
             'access_token' => $access_token,

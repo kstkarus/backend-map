@@ -17,13 +17,21 @@ $pdo->exec('TRUNCATE TABLE club_reviews');
 $pdo->exec('TRUNCATE TABLE club_photos');
 $pdo->exec('TRUNCATE TABLE clubs');
 $pdo->exec('TRUNCATE TABLE users');
+$pdo->exec('TRUNCATE TABLE cities');
 $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
 
 // Пользователи
 $users = [
-    ['user1@example.com', password_hash('password1', PASSWORD_DEFAULT), 'Иван', 'Москва', '2000-01-01', '+79991111111', 'user'],
-    ['user2@example.com', password_hash('password2', PASSWORD_DEFAULT), 'Мария', 'Санкт-Петербург', '1995-05-10', null, 'user'],
-    ['admin@example.com', password_hash('adminpass', PASSWORD_DEFAULT), 'Админ', 'Москва', '1990-12-31', null, 'admin'],
+    // user1: только обязательные поля
+    ['user1@example.com', password_hash('password1', PASSWORD_DEFAULT), null, null, null, null, 'user'],
+    // user2: все поля заполнены
+    ['user2@example.com', password_hash('password2', PASSWORD_DEFAULT), 'Мария', 'Санкт-Петербург', '1995-05-10', '+79992223344', 'user'],
+    // admin: только email, пароль, имя
+    ['admin@example.com', password_hash('adminpass', PASSWORD_DEFAULT), 'Админ', null, null, null, 'admin'],
+    // user3: email, пароль, имя, город
+    ['user3@example.com', password_hash('password3', PASSWORD_DEFAULT), 'Алексей', 'Казань', null, null, 'user'],
+    // user4: email, пароль, имя, дата рождения, телефон
+    ['user4@example.com', password_hash('password4', PASSWORD_DEFAULT), 'Ольга', null, '1988-07-15', '+79995556677', 'user'],
 ];
 foreach ($users as $u) {
     $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, city, birthdate, phone, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, 1)');
@@ -105,6 +113,19 @@ $attendees = [
 foreach ($attendees as $a) {
     $stmt = $pdo->prepare('INSERT INTO event_attendees (user_id, event_id) VALUES (?, ?)');
     $stmt->execute($a);
+}
+
+// Города
+$cities = [
+    ['Москва', 1],
+    ['Санкт-Петербург', 1],
+    ['Казань', 1],
+    ['Новосибирск', 0], // неактивный город
+    ['Екатеринбург', 1],
+];
+foreach ($cities as $c) {
+    $stmt = $pdo->prepare('INSERT INTO cities (name, is_active) VALUES (?, ?)');
+    $stmt->execute($c);
 }
 
 echo "Seed успешно выполнен!\n"; 

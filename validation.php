@@ -152,43 +152,41 @@ function validate_phone($phone) {
  */
 function validate_registration_data($data) {
     $errors = [];
-    
     // Валидация email
     $email_validation = validate_email($data['email'] ?? '');
     if (!$email_validation['valid']) {
         $errors['email'] = $email_validation['error'];
     }
-    
     // Валидация пароля
     $password_validation = validate_password($data['password'] ?? '');
     if (!$password_validation['valid']) {
         $errors['password'] = $password_validation['error'];
     }
-    
-    // Валидация имени
-    $name_validation = validate_name($data['name'] ?? '');
-    if (!$name_validation['valid']) {
-        $errors['name'] = $name_validation['error'];
+    // Остальные поля не обязательны
+    if (!empty($data['name'])) {
+        $name_validation = validate_name($data['name']);
+        if (!$name_validation['valid']) {
+            $errors['name'] = $name_validation['error'];
+        }
     }
-    
-    // Валидация города
-    $city_validation = validate_city($data['city'] ?? '');
-    if (!$city_validation['valid']) {
-        $errors['city'] = $city_validation['error'];
+    if (!empty($data['city'])) {
+        $city_validation = validate_city($data['city']);
+        if (!$city_validation['valid']) {
+            $errors['city'] = $city_validation['error'];
+        }
     }
-    
-    // Валидация даты рождения
-    $birthdate_validation = validate_birthdate($data['birthdate'] ?? '');
-    if (!$birthdate_validation['valid']) {
-        $errors['birthdate'] = $birthdate_validation['error'];
+    if (!empty($data['birthdate'])) {
+        $birthdate_validation = validate_birthdate($data['birthdate']);
+        if (!$birthdate_validation['valid']) {
+            $errors['birthdate'] = $birthdate_validation['error'];
+        }
     }
-    
-    // Валидация телефона
-    $phone_validation = validate_phone($data['phone'] ?? '');
-    if (!$phone_validation['valid']) {
-        $errors['phone'] = $phone_validation['error'];
+    if (!empty($data['phone'])) {
+        $phone_validation = validate_phone($data['phone']);
+        if (!$phone_validation['valid']) {
+            $errors['phone'] = $phone_validation['error'];
+        }
     }
-    
     if (!empty($errors)) {
         return [
             'valid' => false,
@@ -196,7 +194,6 @@ function validate_registration_data($data) {
             'message' => 'Проверьте правильность заполнения полей'
         ];
     }
-    
     return ['valid' => true];
 }
 
@@ -225,5 +222,67 @@ function validate_login_data($data) {
         ];
     }
     
+    return ['valid' => true];
+}
+
+/**
+ * Проверка, что город разрешён (есть в таблице cities и активен)
+ */
+function validate_city_db($city) {
+    if (empty($city)) {
+        return ['valid' => true]; // Не передан — не проверяем
+    }
+    require_once __DIR__ . '/db.php';
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $stmt = $pdo->prepare('SELECT 1 FROM cities WHERE name = ? AND is_active = 1');
+    $stmt->execute([$city]);
+    if (!$stmt->fetch()) {
+        return ['valid' => false, 'error' => 'Город недоступен для выбора'];
+    }
+    return ['valid' => true];
+}
+
+/**
+ * Комплексная валидация данных для обновления профиля (PATCH /me)
+ */
+function validate_profile_update_data($data) {
+    $errors = [];
+    if (isset($data['name'])) {
+        $name_validation = validate_name($data['name']);
+        if (!$name_validation['valid']) {
+            $errors['name'] = $name_validation['error'];
+        }
+    }
+    if (isset($data['city'])) {
+        $city_validation = validate_city($data['city']);
+        if (!$city_validation['valid']) {
+            $errors['city'] = $city_validation['error'];
+        } else {
+            $city_db_validation = validate_city_db($data['city']);
+            if (!$city_db_validation['valid']) {
+                $errors['city'] = $city_db_validation['error'];
+            }
+        }
+    }
+    if (isset($data['birthdate'])) {
+        $birthdate_validation = validate_birthdate($data['birthdate']);
+        if (!$birthdate_validation['valid']) {
+            $errors['birthdate'] = $birthdate_validation['error'];
+        }
+    }
+    if (isset($data['phone'])) {
+        $phone_validation = validate_phone($data['phone']);
+        if (!$phone_validation['valid']) {
+            $errors['phone'] = $phone_validation['error'];
+        }
+    }
+    if (!empty($errors)) {
+        return [
+            'valid' => false,
+            'errors' => $errors,
+            'message' => 'Проверьте правильность заполнения полей'
+        ];
+    }
     return ['valid' => true];
 } 
