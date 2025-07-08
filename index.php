@@ -17,7 +17,7 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 
 // Только для /register и /login и /docs не требуется токен
-if (!in_array($path, ['/register', '/login', '/docs', '/cities'])) {
+if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/token/refresh'])) {
     $headers = getallheaders();
     $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
     if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {
