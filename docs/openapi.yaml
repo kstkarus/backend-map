@@ -423,6 +423,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+  /my-events:
+    get:
+      summary: Получить мероприятия, на которые записан текущий пользователь
+      tags:
+        - events
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список мероприятий пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+        '401':
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /sessions:
     get:
       summary: Получить список сессий пользователя

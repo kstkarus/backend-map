@@ -63,4 +63,13 @@ function get_event($event_id) {
     $stmt->execute([$event_id]);
     $event['comments'] = $stmt->fetchAll();
     return $event;
+}
+
+function get_user_events($user_id) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $stmt = $pdo->prepare('SELECT e.* FROM events e JOIN event_attendees a ON a.event_id = e.id WHERE a.user_id = ? AND e.status = "approved" ORDER BY e.start_time ASC');
+    $stmt->execute([$user_id]);
+    $events = $stmt->fetchAll();
+    return $events;
 } 

@@ -255,6 +255,12 @@ if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matc
     exit;
 }
 
+if ($method === 'GET' && $path === '/my-events') {
+    $events = get_user_events($user_id);
+    echo json_encode(['events' => $events]);
+    exit;
+}
+
 if ($method === 'GET' && $path === '/refresh-tokens') {
     $db = new Database();
     $pdo = $db->getPdo();
