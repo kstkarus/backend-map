@@ -118,7 +118,6 @@ if ($method === 'GET' && $path === '/me') {
     
     $response = [
         'success' => true,
-        'token' => $session['token'],
         'user' => [
             'id' => $user['id'],
             'name' => $user['name'],
