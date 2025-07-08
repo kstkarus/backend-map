@@ -464,41 +464,6 @@ paths:
                 properties:
                   error:
                     type: string
-  /sessions:
-    get:
-      summary: Получить список сессий пользователя
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Список сессий
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sessions:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Session'
-  /sessions/{id}:
-    delete:
-      summary: Завершить (отозвать) сессию пользователя
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Успешно
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
   /refresh-tokens:
     get:
       summary: Получить список refresh токенов пользователя
