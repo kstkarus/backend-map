@@ -292,5 +292,55 @@ if ($method === 'GET' && $path === '/cities') {
     exit;
 }
 
+if ($method === 'POST' && $path === '/token/refresh') {
+    $refresh_token = $_COOKIE['refresh_token'] ?? null;
+    $data = json_decode(file_get_contents('php://input'), true);
+    $device_id = $data['device_id'] ?? null;
+    if (!$refresh_token || !$device_id) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Нет refresh token или device_id']);
+        exit;
+    }
+    $row = get_refresh_token($refresh_token, $device_id);
+    if (!$row) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Refresh token невалиден или истёк']);
+        exit;
+    }
+    // Деактивируем старый refresh_token (ротация)
+    deactivate_refresh_token($refresh_token, $device_id);
+    // Генерируем новые токены
+    $user_id = $row['user_id'];
+    $user = get_user_by_id($user_id);
+    if (!$user) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Пользователь не найден']);
+        exit;
+    }
+    $access_payload = [
+        'user_id' => $user_id,
+        'email' => $user['email'],
+        'role' => $user['role'],
+        'is_verified' => $user['is_verified']
+    ];
+    $access_token = create_jwt($access_payload, 900); // 15 минут
+    $new_refresh_token = generate_refresh_token();
+    $refresh_expires = date('Y-m-d H:i:s', time() + 60*60*24*14); // 14 дней
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+    save_refresh_token($user_id, $new_refresh_token, $refresh_expires, $user_agent, $ip, $device_id);
+    setcookie('refresh_token', $new_refresh_token, [
+        'expires' => strtotime($refresh_expires),
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'path' => '/',
+        'secure' => isset($_SERVER['HTTPS'])
+    ]);
+    echo json_encode([
+        'access_token' => $access_token
+    ]);
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(['error' => 'Not found']); 
