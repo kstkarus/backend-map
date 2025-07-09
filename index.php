@@ -265,7 +265,7 @@ if ($method === 'GET' && $path === '/events/attending') {
     exit;
 }
 
-if ($method === 'GET' && $path === '/refresh-tokens') {
+if ($method === 'GET' && $path === '/auth/sessions') {
     $db = new Database();
     $pdo = $db->getPdo();
     $stmt = $pdo->prepare('SELECT id, device_id, user_agent, ip_address, created_at, expires_at FROM refresh_tokens WHERE user_id = ? AND is_active = 1');
@@ -275,7 +275,7 @@ if ($method === 'GET' && $path === '/refresh-tokens') {
     exit;
 }
 
-if ($method === 'DELETE' && preg_match('#^/refresh-tokens/(\d+)$#', $path, $matches)) {
+if ($method === 'DELETE' && preg_match('#^/auth/sessions/(\d+)$#', $path, $matches)) {
     $token_id = (int)$matches[1];
     $db = new Database();
     $pdo = $db->getPdo();

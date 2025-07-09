@@ -423,51 +423,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-  /sessions:
+  /auth/sessions:
     get:
-      summary: Получить список сессий пользователя
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Список сессий
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sessions:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Session'
-  /sessions/{id}:
-    delete:
-      summary: Завершить (отозвать) сессию пользователя
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Успешно
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-  /refresh-tokens:
-    get:
-      summary: Получить список refresh токенов пользователя
+      summary: Получить список сессий пользователя (refresh токенов)
       tags:
         - auth
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Список refresh токенов
+          description: Список сессий
           content:
             application/json:
               schema:
@@ -492,9 +457,9 @@ paths:
                           type: string
                         is_active:
                           type: boolean
-  /refresh-tokens/{id}:
+  /auth/sessions/{id}:
     delete:
-      summary: Деактивировать (удалить) refresh токен пользователя
+      summary: Завершить (удалить) сессию пользователя (refresh токен)
       tags:
         - auth
       security:
@@ -505,10 +470,10 @@ paths:
           schema:
             type: integer
           required: true
-          description: ID refresh токена
+          description: ID сессии (refresh токена)
       responses:
         '200':
-          description: Успешное удаление
+          description: Сессия успешно завершена
           content:
             application/json:
               schema:
@@ -517,7 +482,7 @@ paths:
                   success:
                     type: boolean
         '404':
-          description: Токен не найден
+          description: Сессия не найдена
           content:
             application/json:
               schema:
