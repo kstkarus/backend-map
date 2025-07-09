@@ -112,13 +112,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-  /token/refresh:
+  /auth/refresh:
     post:
       summary: Обновление access/refresh токенов
       tags:
         - auth
       description: |
-        Требует refresh token в httpOnly cookie. Возвращает новый access token и обновляет refresh token (ротация).
+        Требует refresh token в httpOnly cookie. Возвращает новый access token и обновляет refresh token (ротация). После обновления старый refresh token деактивируется и полностью удаляется из базы данных.
       responses:
         '200':
           description: Новая пара токенов
@@ -423,47 +423,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-  /events/attending:
+  /sessions:
     get:
-      summary: Получить мероприятия, на которые записан текущий пользователь
-      tags:
-        - events
+      summary: Получить список сессий пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список сессий
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+  /sessions/{id}:
+    delete:
+      summary: Завершить (отозвать) сессию пользователя
       security:
         - bearerAuth: []
       parameters:
-        - in: query
-          name: type_id
+        - in: path
+          name: id
+          required: true
           schema:
             type: integer
-        - in: query
-          name: date
-          schema:
-            type: string
-        - in: query
-          name: city
-          schema:
-            type: string
       responses:
         '200':
-          description: Список мероприятий пользователя
+          description: Успешно
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  events:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Event'
-        '401':
-          description: Неавторизован
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
+                $ref: '#/components/schemas/SuccessResponse'
   /refresh-tokens:
     get:
       summary: Получить список refresh токенов пользователя

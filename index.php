@@ -17,7 +17,7 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 
 // Только для /register и /login и /docs не требуется токен
-if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/token/refresh'])) {
+if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/auth/refresh'])) {
     $headers = getallheaders();
     $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
     if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {
@@ -303,7 +303,7 @@ if ($method === 'GET' && $path === '/cities') {
     exit;
 }
 
-if ($method === 'POST' && $path === '/token/refresh') {
+if ($method === 'POST' && $path === '/auth/refresh') {
     $refresh_token = $_COOKIE['refresh_token'] ?? null;
     $data = json_decode(file_get_contents('php://input'), true);
     $device_id = $data['device_id'] ?? null;
@@ -320,6 +320,7 @@ if ($method === 'POST' && $path === '/token/refresh') {
     }
     // Деактивируем старый refresh_token (ротация)
     deactivate_refresh_token($refresh_token, $device_id);
+    delete_refresh_token($refresh_token, $device_id); // Удаляем старый refresh_token
     // Генерируем новые токены
     $user_id = $row['user_id'];
     $user = get_user_by_id($user_id);

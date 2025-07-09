@@ -47,6 +47,18 @@ function get_refresh_token($token, $device_id = null) {
     return $stmt->fetch();
 }
 
+function delete_refresh_token($token, $device_id = null) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    if ($device_id) {
+        $stmt = $pdo->prepare('DELETE FROM refresh_tokens WHERE token = ? AND device_id = ?');
+        $stmt->execute([$token, $device_id]);
+    } else {
+        $stmt = $pdo->prepare('DELETE FROM refresh_tokens WHERE token = ?');
+        $stmt->execute([$token]);
+    }
+}
+
 // --- Регистрация пользователя ---
 function register_user($email, $password, $name = null, $city = null, $birthdate = null, $phone = null, $device_id = '') {
     // Валидация только email и пароля
@@ -164,6 +176,16 @@ function login_user($email, $password, $device_id = '') {
     }
     
     try {
+        // Деактивируем и удаляем все refresh токены для этого пользователя и device_id
+        $db = new Database();
+        $pdo = $db->getPdo();
+        $stmt = $pdo->prepare('SELECT token FROM refresh_tokens WHERE user_id = ? AND device_id = ? AND is_active = 1');
+        $stmt->execute([$user['id'], $device_id]);
+        $tokens = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($tokens as $t) {
+            deactivate_refresh_token($t['token'], $device_id);
+            delete_refresh_token($t['token'], $device_id);
+        }
         $access_payload = [
             'user_id' => $user['id'],
             'email' => $email,
