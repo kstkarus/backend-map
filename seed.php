@@ -25,13 +25,13 @@ $users = [
     // user1: только обязательные поля
     ['user1@example.com', password_hash('password1', PASSWORD_DEFAULT), null, null, null, null, 'user'],
     // user2: все поля заполнены
-    ['user2@example.com', password_hash('password2', PASSWORD_DEFAULT), 'Мария', 'Санкт-Петербург', '1995-05-10', '+79992223344', 'user'],
+    ['user2@example.com', password_hash('password2', PASSWORD_DEFAULT), 'Мария', 'Санкт-Петербург', '1995-05-10T00:00:00Z', '+79992223344', 'user'],
     // admin: только email, пароль, имя
     ['admin@example.com', password_hash('adminpass', PASSWORD_DEFAULT), 'Админ', null, null, null, 'admin'],
     // user3: email, пароль, имя, город
     ['user3@example.com', password_hash('password3', PASSWORD_DEFAULT), 'Алексей', 'Казань', null, null, 'user'],
     // user4: email, пароль, имя, дата рождения, телефон
-    ['user4@example.com', password_hash('password4', PASSWORD_DEFAULT), 'Ольга', null, '1988-07-15', '+79995556677', 'user'],
+    ['user4@example.com', password_hash('password4', PASSWORD_DEFAULT), 'Ольга', null, '1988-07-15T00:00:00Z', '+79995556677', 'user'],
 ];
 foreach ($users as $u) {
     $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, city, birthdate, phone, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, 1)');
