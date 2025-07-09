@@ -164,7 +164,7 @@ function login_user($email, $password, $device_id = '') {
     $db = new Database();
     $pdo = $db->getPdo();
     
-    $stmt = $pdo->prepare('SELECT id, password_hash, name, role, is_verified FROM users WHERE email = ?');
+    $stmt = $pdo->prepare('SELECT id, password_hash, name, city, birthdate, phone, role, is_verified FROM users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     
@@ -212,6 +212,9 @@ function login_user($email, $password, $device_id = '') {
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'email' => $email,
+                'city' => $user['city'],
+                'birthdate' => $user['birthdate'],
+                'phone' => $user['phone'],
                 'role' => $user['role'],
                 'is_verified' => $user['is_verified'],
             ]
