@@ -213,6 +213,58 @@ paths:
                 properties:
                   error:
                     type: string
+  /me/reviews:
+    get:
+      summary: Получить все отзывы пользователя (на клубы и события)
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список отзывов пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  club_reviews:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        club_id:
+                          type: integer
+                        rating:
+                          type: integer
+                        review:
+                          type: string
+                        created_at:
+                          type: string
+                  event_comments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        event_id:
+                          type: integer
+                        comment:
+                          type: string
+                        created_at:
+                          type: string
+        '401':
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /clubs:
     get:
       summary: Получить список клубов
@@ -512,6 +564,47 @@ paths:
                           type: integer
                         name:
                           type: string
+  /events/attending:
+    get:
+      summary: Получить список мероприятий, на которые записан пользователь
+      tags:
+        - events
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: type_id
+          schema:
+            type: integer
+        - in: query
+          name: date
+          schema:
+            type: string
+        - in: query
+          name: city
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список мероприятий
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+        '401':
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 components:
   securitySchemes:
     bearerAuth:

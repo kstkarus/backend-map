@@ -178,6 +178,24 @@ if ($method === 'PATCH' && $path === '/me') {
     exit;
 }
 
+if ($method === 'GET' && $path === '/me/reviews') {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    // Отзывы на клубы
+    $stmt = $pdo->prepare('SELECT id, club_id, rating, review, created_at FROM club_reviews WHERE user_id = ? ORDER BY created_at DESC');
+    $stmt->execute([$user_id]);
+    $club_reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Отзывы на события (комментарии)
+    $stmt = $pdo->prepare('SELECT id, event_id, comment, created_at FROM event_comments WHERE user_id = ? ORDER BY created_at DESC');
+    $stmt->execute([$user_id]);
+    $event_comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode([
+        'club_reviews' => $club_reviews,
+        'event_comments' => $event_comments
+    ]);
+    exit;
+}
+
 if ($method === 'GET' && $path === '/clubs') {
     $clubs = get_clubs();
     echo json_encode(['clubs' => $clubs]);
