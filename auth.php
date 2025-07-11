@@ -83,12 +83,13 @@ function register_user($email, $password, $name = null, $city = null, $birthdate
         ];
     }
     $clean_phone = null;
-    if (!empty($phone)) {
-        $phone_validation = validate_phone($phone);
-        if ($phone_validation['valid'] && isset($phone_validation['clean_phone'])) {
-            $clean_phone = $phone_validation['clean_phone'];
-        }
-    }
+    // if (!empty($phone)) {
+    //     $phone_validation = validate_phone($phone);
+    //     if ($phone_validation['valid'] && isset($phone_validation['clean_phone'])) {
+    //         $clean_phone = $phone_validation['clean_phone'];
+    //     }
+    // }
+    $user_id = null;
     try {
         $pdo->beginTransaction();
         $hash = password_hash($password, PASSWORD_DEFAULT);
@@ -102,18 +103,28 @@ function register_user($email, $password, $name = null, $city = null, $birthdate
             $clean_phone
         ]);
         $user_id = $pdo->lastInsertId();
-        // --- JWT ---
-        $access_payload = [
-            'user_id' => $user_id,
-            'email' => $email,
-            'role' => 'user',
-            'is_verified' => 0
+        $pdo->commit();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        return [
+            'error' => 'Ошибка при создании аккаунта. Попробуйте позже.',
+            'debug' => $e->getMessage()
         ];
-        $access_token = create_jwt($access_payload, 900); // 15 минут
-        $refresh_token = generate_refresh_token();
-        $refresh_expires = date('Y-m-d H:i:s', time() + 60*60*24*14); // 14 дней
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+    }
+    // --- JWT ---
+    $access_payload = [
+        'user_id' => $user_id,
+        'email' => $email,
+        'role' => 'user',
+        'is_verified' => 0
+    ];
+    $access_token = create_jwt($access_payload, 900); // 15 минут
+    $refresh_token = generate_refresh_token();
+    $refresh_expires = date('Y-m-d H:i:s', time() + 60*60*24*14); // 14 дней
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+    try {
+        $pdo->beginTransaction();
         save_refresh_token($user_id, $refresh_token, $refresh_expires, $user_agent, $ip, $device_id);
         $pdo->commit();
         setcookie('refresh_token', $refresh_token, [
@@ -123,27 +134,27 @@ function register_user($email, $password, $name = null, $city = null, $birthdate
             'path' => '/',
             'secure' => isset($_SERVER['HTTPS'])
         ]);
-        return [
-            'success' => true,
-            'access_token' => $access_token,
-            'user' => [
-                'id' => $user_id,
-                'name' => $name,
-                'email' => $email,
-                'city' => $city,
-                'birthdate' => $birthdate,
-                'phone' => $clean_phone,
-                'role' => 'user',
-                'is_verified' => 0,
-            ]
-        ];
     } catch (Exception $e) {
         $pdo->rollBack();
         return [
-            'error' => 'Ошибка при создании аккаунта. Попробуйте позже.',
-            'debug' => $e->getMessage() // Убрать в продакшене
+            'error' => 'Пользователь создан, но не удалось создать refresh_token. Попробуйте войти заново.',
+            'debug' => $e->getMessage()
         ];
     }
+    return [
+        'success' => true,
+        'access_token' => $access_token,
+        'user' => [
+            'id' => $user_id,
+            'name' => $name,
+            'email' => $email,
+            'city' => $city,
+            'birthdate' => $birthdate,
+            'phone' => $clean_phone,
+            'role' => 'user',
+            'is_verified' => 0,
+        ]
+    ];
 }
 
 // --- Логин пользователя ---
