@@ -100,6 +100,10 @@ $jwt_secret = $smtp_config['jwt_secret'] ?? 'default_secret';
 
 function send_reset_email($email, $reset_link) {
     global $smtp_config;
+    $log_dir = __DIR__ . '/../logs';
+    if (!is_dir($log_dir)) {
+        mkdir($log_dir, 0777, true);
+    }
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
@@ -120,10 +124,10 @@ function send_reset_email($email, $reset_link) {
 
         // Включаем отладку PHPMailer
         $mail->SMTPDebug = 2;
-        $mail->Debugoutput = function($str, $level) { file_put_contents(__DIR__ . '/phpmailer_debug.log', $str . PHP_EOL, FILE_APPEND); };
+        $mail->Debugoutput = function($str, $level) use ($log_dir) { file_put_contents($log_dir . '/phpmailer_debug.log', $str . PHP_EOL, FILE_APPEND); };
 
         $mail->send();
     } catch (Exception $e) {
-        file_put_contents(__DIR__ . '/mail_errors.log', $e->getMessage() . PHP_EOL, FILE_APPEND);
+        file_put_contents($log_dir . '/mail_errors.log', $e->getMessage() . PHP_EOL, FILE_APPEND);
     }
 } 
