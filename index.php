@@ -17,7 +17,7 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 
 
-if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/auth/refresh', '/password/forgot', '/password/reset'])) {
+if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/auth/refresh', '/password/forgot', '/password/reset', '/reset'])) {
     $headers = getallheaders();
     $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
     if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {
@@ -385,7 +385,7 @@ if ($method === 'POST' && $path === '/password/forgot') {
         exit;
     }
     $user = get_user_by_email($data['email']);
-    // Ответ всегда одинаковый для безопасности
+    
     if ($user) {
         $token = generate_reset_token();
         $expires = date('Y-m-d H:i:s', time() + 3600); // 1 час
