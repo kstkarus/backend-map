@@ -426,5 +426,12 @@ if ($method === 'POST' && $path === '/password/reset') {
     exit;
 }
 
+if ($method === 'GET' && $path === '/reset') {
+    $token = isset($_GET['token']) ? urlencode($_GET['token']) : '';
+    $location = '/reset_password.html' . ($token ? ('?token=' . $token) : '');
+    header('Location: ' . $location, true, 302);
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(['error' => 'Not found']); 
