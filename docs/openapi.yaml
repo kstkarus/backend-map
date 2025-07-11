@@ -34,6 +34,9 @@ paths:
                   type: string
                 phone:
                   type: string
+                device_id:
+                  type: string
+                  description: Уникальный идентификатор устройства (опционально)
       responses:
         '200':
           description: Успешная регистрация

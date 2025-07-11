@@ -38,16 +38,13 @@ if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/auth/refresh'
 
 if ($method === 'POST' && $path === '/register') {
     $data = json_decode(file_get_contents('php://input'), true);
-    if (!isset($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'])) {
+    if (!isset($data['email'], $data['password'])) {
         http_response_code(400);
         echo json_encode([
-            'error' => 'Необходимы email, password, name, city, birthdate',
+            'error' => 'Необходимы email и password',
             'errors' => [
                 'email' => 'Email обязателен для заполнения',
-                'password' => 'Пароль обязателен для заполнения',
-                'name' => 'Имя обязательно для заполнения',
-                'city' => 'Город обязателен для заполнения',
-                'birthdate' => 'Дата рождения обязательна для заполнения'
+                'password' => 'Пароль обязателен для заполнения'
             ]
         ]);
         exit;
@@ -62,7 +59,15 @@ if ($method === 'POST' && $path === '/register') {
         }
     }
     $device_id = $data['device_id'] ?? '';
-    $result = register_user($data['email'], $data['password'], $data['name'], $data['city'], $data['birthdate'], $data['phone'] ?? null, $device_id);
+    $result = register_user(
+        $data['email'],
+        $data['password'],
+        $data['name'] ?? null,
+        $data['city'] ?? null,
+        $data['birthdate'] ?? null,
+        $data['phone'] ?? null,
+        $device_id
+    );
     
     if (isset($result['error'])) {
         http_response_code(400);
