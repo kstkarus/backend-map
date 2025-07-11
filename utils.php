@@ -110,6 +110,7 @@ function send_reset_email($email, $reset_link) {
         mkdir($log_dir, 0777, true);
     }
     $mail = new PHPMailer(true);
+    $mail->CharSet = 'UTF-8';
     try {
         $mail->isSMTP();
         $mail->Host = $smtp_config['smtp_host'] ?? '';
