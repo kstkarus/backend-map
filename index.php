@@ -49,15 +49,15 @@ if ($method === 'POST' && $path === '/register') {
         ]);
         exit;
     }
-    // Валидация города через функцию
-    if (!empty($data['city'])) {
-        $city_check = validate_city_db($data['city']);
-        if (!$city_check['valid']) {
-            http_response_code(400);
-            echo json_encode(['error' => $city_check['error']]);
-            exit;
-        }
-    }
+    // // Валидация города через функцию
+    // if (!empty($data['city'])) {
+    //     $city_check = validate_city_db($data['city']);
+    //     if (!$city_check['valid']) {
+    //         http_response_code(400);
+    //         echo json_encode(['error' => $city_check['error']]);
+    //         exit;
+    //     }
+    // }
     $device_id = $data['device_id'] ?? '';
     $result = register_user(
         $data['email'],
