@@ -162,31 +162,7 @@ function validate_registration_data($data) {
     if (!$password_validation['valid']) {
         $errors['password'] = $password_validation['error'];
     }
-    // Остальные поля не обязательны
-    if (!empty($data['name'])) {
-        $name_validation = validate_name($data['name']);
-        if (!$name_validation['valid']) {
-            $errors['name'] = $name_validation['error'];
-        }
-    }
-    if (!empty($data['city'])) {
-        $city_validation = validate_city($data['city']);
-        if (!$city_validation['valid']) {
-            $errors['city'] = $city_validation['error'];
-        }
-    }
-    if (!empty($data['birthdate'])) {
-        $birthdate_validation = validate_birthdate($data['birthdate']);
-        if (!$birthdate_validation['valid']) {
-            $errors['birthdate'] = $birthdate_validation['error'];
-        }
-    }
-    if (!empty($data['phone'])) {
-        $phone_validation = validate_phone($data['phone']);
-        if (!$phone_validation['valid']) {
-            $errors['phone'] = $phone_validation['error'];
-        }
-    }
+    // Остальные поля не валидируем
     if (!empty($errors)) {
         return [
             'valid' => false,
