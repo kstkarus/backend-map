@@ -16,12 +16,12 @@ function base64url_decode($data) {
     return base64_decode(strtr($data, '-_', '+/'));
 }
 
-function create_jwt($payload, $exp = 3600) {
+function create_jwt($payload, $exp = 900) {
+    global $jwt_secret;
     $header = ['alg' => 'HS256', 'typ' => 'JWT'];
-    $payload['exp'] = time() + $exp;
     $segments = [
         base64url_encode(json_encode($header)),
-        base64url_encode(json_encode($payload))
+        base64url_encode(json_encode(array_merge($payload, ['exp' => time() + $exp])))
     ];
     $signing_input = implode('.', $segments);
     $signature = hash_hmac('sha256', $signing_input, $jwt_secret, true);
@@ -30,6 +30,7 @@ function create_jwt($payload, $exp = 3600) {
 }
 
 function verify_jwt($jwt) {
+    global $jwt_secret;
     $parts = explode('.', $jwt);
     if (count($parts) !== 3) return false;
     list($header64, $payload64, $signature64) = $parts;
