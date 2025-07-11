@@ -377,5 +377,44 @@ if ($method === 'POST' && $path === '/auth/refresh') {
     exit;
 }
 
+if ($method === 'POST' && $path === '/password/forgot') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (!isset($data['email'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Email обязателен']);
+        exit;
+    }
+    $user = get_user_by_email($data['email']);
+    // Ответ всегда одинаковый для безопасности
+    if ($user) {
+        $token = generate_reset_token();
+        $expires = date('Y-m-d H:i:s', time() + 3600); // 1 час
+        create_password_reset($user['id'], $token, $expires);
+        $reset_link = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/reset?token=' . $token;
+        send_reset_email($user['email'], $reset_link);
+    }
+    echo json_encode(['success' => true, 'message' => 'Если такой email существует, инструкция отправлена']);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/password/reset') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (!isset($data['token'], $data['password'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Требуются token и password']);
+        exit;
+    }
+    $reset = get_password_reset($data['token']);
+    if (!$reset) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Токен невалиден или истёк']);
+        exit;
+    }
+    update_user_password($reset['user_id'], $data['password']);
+    mark_password_reset_used($reset['id']);
+    echo json_encode(['success' => true, 'message' => 'Пароль успешно изменён']);
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(['error' => 'Not found']); 
