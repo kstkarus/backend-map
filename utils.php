@@ -118,6 +118,10 @@ function send_reset_email($email, $reset_link) {
         $mail->Body = 'Для сброса пароля перейдите по ссылке: <a href="' . htmlspecialchars($reset_link) . '">' . htmlspecialchars($reset_link) . '</a>';
         $mail->AltBody = 'Для сброса пароля перейдите по ссылке: ' . $reset_link;
 
+        // Включаем отладку PHPMailer
+        $mail->SMTPDebug = 2;
+        $mail->Debugoutput = function($str, $level) { file_put_contents(__DIR__ . '/phpmailer_debug.log', $str . PHP_EOL, FILE_APPEND); };
+
         $mail->send();
     } catch (Exception $e) {
         file_put_contents(__DIR__ . '/mail_errors.log', $e->getMessage() . PHP_EOL, FILE_APPEND);

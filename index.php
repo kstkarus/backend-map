@@ -404,6 +404,16 @@ if ($method === 'POST' && $path === '/password/reset') {
         echo json_encode(['error' => 'Требуются token и password']);
         exit;
     }
+
+    $password_validation = validate_password($data['password']);
+    if (!$password_validation['valid']) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => $password_validation['error'],
+            'errors' => ['password' => $password_validation['error']]
+        ]);
+        exit;
+    }
     $reset = get_password_reset($data['token']);
     if (!$reset) {
         http_response_code(400);
