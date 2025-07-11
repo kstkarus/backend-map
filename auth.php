@@ -102,7 +102,7 @@ function register_user($email, $password, $name = null, $city = null, $birthdate
             $birthdate,
             $clean_phone
         ]);
-        $user_id = $pdo->lastInsertId();
+        $user_id = (int)$pdo->lastInsertId();
         $pdo->commit();
     } catch (Exception $e) {
         $pdo->rollBack();
