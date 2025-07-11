@@ -65,7 +65,7 @@ function get_user_by_email($email) {
 }
 
 function create_password_reset($user_id, $token, $expires_at) {
-    $log_dir = __DIR__ . '/../logs';
+    $log_dir = __DIR__ . '/logs';
     if (!is_dir($log_dir)) {
         mkdir($log_dir, 0777, true);
     }
@@ -105,7 +105,7 @@ $jwt_secret = $smtp_config['jwt_secret'] ?? 'default_secret';
 
 function send_reset_email($email, $reset_link) {
     global $smtp_config;
-    $log_dir = __DIR__ . '/../logs';
+    $log_dir = __DIR__ . '/logs';
     if (!is_dir($log_dir)) {
         mkdir($log_dir, 0777, true);
     }
