@@ -95,7 +95,7 @@ function update_user_password($user_id, $password) {
     $db = new Database();
     $pdo = $db->getPdo();
     $hash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+    $stmt = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
     $stmt->execute([$hash, $user_id]);
 }
 
