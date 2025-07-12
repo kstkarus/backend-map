@@ -127,12 +127,15 @@ CREATE TABLE cities (
     is_active TINYINT(1) DEFAULT 1
 ); 
 
-CREATE TABLE IF NOT EXISTS password_resets (
+-- Универсальная таблица для кодов сброса пароля и подтверждения email
+CREATE TABLE user_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    token VARCHAR(255) NOT NULL,
+    user_id INT NULL,
+    email VARCHAR(255) NULL,
+    code VARCHAR(10) NOT NULL,
+    type ENUM('reset', 'verify') NOT NULL,
     expires_at DATETIME NOT NULL,
     used TINYINT(1) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ); 

@@ -377,52 +377,83 @@ if ($method === 'POST' && $path === '/auth/refresh') {
     exit;
 }
 
-if ($method === 'POST' && $path === '/password/forgot') {
+if ($method === 'POST' && $path === '/auth/request-reset') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (!isset($data['email'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Email обязателен']);
         exit;
     }
-    $user = get_user_by_email($data['email']);
-    
-    if ($user) {
-        $token = generate_reset_token();
-        $expires = date('Y-m-d H:i:s', time() + 3600); // 1 час
-        create_password_reset($user['id'], $token, $expires);
-        $reset_link = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/reset?token=' . $token;
-        send_reset_email($user['email'], $reset_link);
+    require_once __DIR__ . '/utils.php';
+    $result = request_reset_code($data['email']);
+    if (isset($result['error'])) {
+        http_response_code(400);
     }
-    echo json_encode(['success' => true, 'message' => 'Если такой email существует, инструкция отправлена']);
+    echo json_encode($result);
     exit;
 }
 
-if ($method === 'POST' && $path === '/password/reset') {
+if ($method === 'POST' && $path === '/auth/verify-reset-code') {
     $data = json_decode(file_get_contents('php://input'), true);
-    if (!isset($data['token'], $data['password'])) {
+    if (!isset($data['email'], $data['code'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Требуются token и password']);
+        echo json_encode(['error' => 'Email и код обязательны']);
         exit;
     }
+    require_once __DIR__ . '/utils.php';
+    $result = verify_reset_code($data['email'], $data['code']);
+    if (isset($result['error'])) {
+        http_response_code(400);
+    }
+    echo json_encode($result);
+    exit;
+}
 
-    $password_validation = validate_password($data['password']);
-    if (!$password_validation['valid']) {
+if ($method === 'POST' && $path === '/auth/reset-password') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (!isset($data['email'], $data['code'], $data['password'])) {
         http_response_code(400);
-        echo json_encode([
-            'error' => $password_validation['error'],
-            'errors' => ['password' => $password_validation['error']]
-        ]);
+        echo json_encode(['error' => 'Email, код и новый пароль обязательны']);
         exit;
     }
-    $reset = get_password_reset($data['token']);
-    if (!$reset) {
+    require_once __DIR__ . '/utils.php';
+    $result = reset_password_with_code($data['email'], $data['code'], $data['password']);
+    if (isset($result['error'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Токен невалиден или истёк']);
+    }
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/auth/request-email-verification') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (!isset($data['email'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Email обязателен']);
         exit;
     }
-    update_user_password($reset['user_id'], $data['password']);
-    mark_password_reset_used($reset['id']);
-    echo json_encode(['success' => true, 'message' => 'Пароль успешно изменён']);
+    require_once __DIR__ . '/utils.php';
+    $result = request_email_verification_code($data['email']);
+    if (isset($result['error'])) {
+        http_response_code(400);
+    }
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/auth/verify-email-code') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (!isset($data['email'], $data['code'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Email и код обязательны']);
+        exit;
+    }
+    require_once __DIR__ . '/utils.php';
+    $result = verify_email_code($data['email'], $data['code']);
+    if (isset($result['error'])) {
+        http_response_code(400);
+    }
+    echo json_encode($result);
     exit;
 }
 

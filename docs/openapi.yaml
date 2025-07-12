@@ -608,9 +608,9 @@ paths:
                 properties:
                   error:
                     type: string
-  /password/forgot:
+  /auth/request-reset:
     post:
-      summary: Запрос на сброс пароля
+      summary: Запросить код для сброса пароля
       tags:
         - auth
       requestBody:
@@ -625,7 +625,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: Если email существует, отправлено письмо (ответ всегда одинаковый для безопасности)
+          description: Код отправлен на почту
           content:
             application/json:
               schema:
@@ -636,7 +636,7 @@ paths:
                   message:
                     type: string
         '400':
-          description: Ошибка валидации
+          description: Ошибка
           content:
             application/json:
               schema:
@@ -644,9 +644,9 @@ paths:
                 properties:
                   error:
                     type: string
-  /password/reset:
+  /auth/verify-reset-code:
     post:
-      summary: Сброс пароля по токену
+      summary: Проверить код для сброса пароля
       tags:
         - auth
       requestBody:
@@ -655,9 +655,47 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token, password]
+              required: [email, code]
               properties:
-                token:
+                email:
+                  type: string
+                code:
+                  type: string
+      responses:
+        '200':
+          description: Код верный
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: Код невалиден или истёк
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /auth/reset-password:
+    post:
+      summary: Сбросить пароль по коду
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code, password]
+              properties:
+                email:
+                  type: string
+                code:
                   type: string
                 password:
                   type: string
@@ -674,7 +712,81 @@ paths:
                   message:
                     type: string
         '400':
-          description: Ошибка валидации или токен невалиден
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /auth/request-email-verification:
+    post:
+      summary: Запросить код для подтверждения email
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Код отправлен на почту
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /auth/verify-email-code:
+    post:
+      summary: Подтвердить email по коду
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
+      responses:
+        '200':
+          description: Email подтверждён
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Ошибка
           content:
             application/json:
               schema:

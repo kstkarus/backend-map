@@ -52,43 +52,12 @@ function get_bearer_token() {
     return null;
 }
 
-function generate_reset_token($length = 64) {
-    return bin2hex(random_bytes($length / 2));
-}
-
 function get_user_by_email($email) {
     $db = new Database();
     $pdo = $db->getPdo();
     $stmt = $pdo->prepare('SELECT * FROM users WHERE email = ?');
     $stmt->execute([$email]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-function create_password_reset($user_id, $token, $expires_at) {
-    $log_dir = __DIR__ . '/logs';
-    if (!is_dir($log_dir)) {
-        mkdir($log_dir, 0777, true);
-    }
-    file_put_contents($log_dir . '/debug_password_reset.log', date('c') . " user_id=$user_id token=$token expires=$expires_at\n", FILE_APPEND);
-    $db = new Database();
-    $pdo = $db->getPdo();
-    $stmt = $pdo->prepare('INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)');
-    $stmt->execute([$user_id, $token, $expires_at]);
-}
-
-function get_password_reset($token) {
-    $db = new Database();
-    $pdo = $db->getPdo();
-    $stmt = $pdo->prepare('SELECT * FROM password_resets WHERE token = ? AND used = 0 AND expires_at > NOW()');
-    $stmt->execute([$token]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-function mark_password_reset_used($id) {
-    $db = new Database();
-    $pdo = $db->getPdo();
-    $stmt = $pdo->prepare('UPDATE password_resets SET used = 1 WHERE id = ?');
-    $stmt->execute([$id]);
 }
 
 function update_user_password($user_id, $password) {
@@ -135,5 +104,125 @@ function send_reset_email($email, $reset_link) {
         $mail->send();
     } catch (Exception $e) {
         file_put_contents($log_dir . '/mail_errors.log', $e->getMessage() . PHP_EOL, FILE_APPEND);
+    }
+}
+
+// --- Новый функционал для кодов сброса пароля и подтверждения email ---
+function generate_5digit_code() {
+    return str_pad(strval(random_int(0, 99999)), 5, '0', STR_PAD_LEFT);
+}
+
+function save_user_code($email, $user_id, $code, $type) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $expires_at = date('Y-m-d H:i:s', time() + 600); // 10 минут
+    $stmt = $pdo->prepare('INSERT INTO user_codes (user_id, email, code, type, expires_at) VALUES (?, ?, ?, ?, ?)');
+    $stmt->execute([$user_id, $email, $code, $type, $expires_at]);
+}
+
+function request_reset_code($email) {
+    $user = get_user_by_email($email);
+    if (!$user) {
+        return ['success' => true, 'message' => 'Если такой email существует, код отправлен'];
+    }
+    $code = generate_5digit_code();
+    save_user_code($email, $user['id'], $code, 'reset');
+    send_code_email($email, $code, 'reset');
+    return ['success' => true, 'message' => 'Код отправлен на почту'];
+}
+
+function verify_reset_code($email, $code) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $stmt = $pdo->prepare('SELECT * FROM user_codes WHERE email = ? AND code = ? AND type = ? AND used = 0 AND expires_at > NOW()');
+    $stmt->execute([$email, $code, 'reset']);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return ['error' => 'Код невалиден или истёк'];
+    }
+    return ['success' => true];
+}
+
+function reset_password_with_code($email, $code, $password) {
+    $user = get_user_by_email($email);
+    if (!$user) {
+        return ['error' => 'Пользователь не найден'];
+    }
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $stmt = $pdo->prepare('SELECT * FROM user_codes WHERE email = ? AND code = ? AND type = ? AND used = 0 AND expires_at > NOW()');
+    $stmt->execute([$email, $code, 'reset']);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return ['error' => 'Код невалиден или истёк'];
+    }
+    $password_validation = validate_password($password);
+    if (!$password_validation['valid']) {
+        return ['error' => $password_validation['error']];
+    }
+    update_user_password($user['id'], $password);
+    $stmt = $pdo->prepare('UPDATE user_codes SET used = 1 WHERE id = ?');
+    $stmt->execute([$row['id']]);
+    return ['success' => true, 'message' => 'Пароль успешно изменён'];
+}
+
+function request_email_verification_code($email) {
+    $user = get_user_by_email($email);
+    if (!$user) {
+        return ['error' => 'Пользователь не найден'];
+    }
+    $code = generate_5digit_code();
+    save_user_code($email, $user['id'], $code, 'verify');
+    send_code_email($email, $code, 'verify');
+    return ['success' => true, 'message' => 'Код отправлен на почту'];
+}
+
+function verify_email_code($email, $code) {
+    $user = get_user_by_email($email);
+    if (!$user) {
+        return ['error' => 'Пользователь не найден'];
+    }
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $stmt = $pdo->prepare('SELECT * FROM user_codes WHERE email = ? AND code = ? AND type = ? AND used = 0 AND expires_at > NOW()');
+    $stmt->execute([$email, $code, 'verify']);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return ['error' => 'Код невалиден или истёк'];
+    }
+    $stmt = $pdo->prepare('UPDATE users SET is_verified = 1 WHERE id = ?');
+    $stmt->execute([$user['id']]);
+    $stmt = $pdo->prepare('UPDATE user_codes SET used = 1 WHERE id = ?');
+    $stmt->execute([$row['id']]);
+    return ['success' => true, 'message' => 'Email подтверждён'];
+}
+
+function send_code_email($email, $code, $type) {
+    global $smtp_config;
+    $mail = new PHPMailer(true);
+    $mail->CharSet = 'UTF-8';
+    try {
+        $mail->isSMTP();
+        $mail->Host = $smtp_config['smtp_host'] ?? '';
+        $mail->SMTPAuth = true;
+        $mail->Username = $smtp_config['smtp_user'] ?? '';
+        $mail->Password = $smtp_config['smtp_pass'] ?? '';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port = $smtp_config['smtp_port'] ?? 465;
+        $mail->setFrom($smtp_config['smtp_from'] ?? '', $smtp_config['smtp_from_name'] ?? '');
+        $mail->addAddress($email);
+        $mail->isHTML(true);
+        if ($type === 'reset') {
+            $mail->Subject = 'Код для сброса пароля';
+            $mail->Body = 'Ваш код для сброса пароля: <b>' . htmlspecialchars($code) . '</b><br>Код действует 10 минут.';
+            $mail->AltBody = 'Ваш код для сброса пароля: ' . $code . '. Код действует 10 минут.';
+        } else {
+            $mail->Subject = 'Код для подтверждения почты';
+            $mail->Body = 'Ваш код для подтверждения почты: <b>' . htmlspecialchars($code) . '</b><br>Код действует 10 минут.';
+            $mail->AltBody = 'Ваш код для подтверждения почты: ' . $code . '. Код действует 10 минут.';
+        }
+        $mail->send();
+    } catch (Exception $e) {
+        // Можно логировать ошибку
     }
 } 
