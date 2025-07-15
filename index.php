@@ -218,6 +218,17 @@ if ($method === 'GET' && preg_match('#^/clubs/(\\d+)$#', $path, $matches)) {
     exit;
 }
 
+if ($method === 'GET' && preg_match('#^/clubs/(\\d+)/events$#', $path, $matches)) {
+    $club_id = (int)$matches[1];
+    $filters = [];
+    if (isset($_GET['type_id'])) $filters['type_id'] = (int)$_GET['type_id'];
+    if (isset($_GET['date'])) $filters['date'] = $_GET['date'];
+    if (isset($_GET['city'])) $filters['city'] = $_GET['city'];
+    $events = get_events_by_club_id($club_id, $filters);
+    echo json_encode(['events' => $events]);
+    exit;
+}
+
 if ($method === 'GET' && $path === '/events') {
     $filters = [];
     if (isset($_GET['type_id'])) $filters['type_id'] = (int)$_GET['type_id'];

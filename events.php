@@ -91,4 +91,33 @@ function get_user_events($user_id, $filters = []) {
     $stmt->execute($params);
     $events = $stmt->fetchAll();
     return $events;
+}
+
+// Получить мероприятия по club_id
+function get_events_by_club_id($club_id, $filters = []) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $where = ['club_id = ?', 'status = "approved"'];
+    $params = [$club_id];
+    if (!empty($filters['type_id'])) {
+        $where[] = 'type_id = ?';
+        $params[] = $filters['type_id'];
+    }
+    if (!empty($filters['date'])) {
+        $where[] = 'DATE(start_time) = ?';
+        $params[] = $filters['date'];
+    }
+    if (!empty($filters['city'])) {
+        $where[] = 'city = ?';
+        $params[] = $filters['city'];
+    }
+    $sql = 'SELECT * FROM events';
+    if ($where) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $sql .= ' ORDER BY start_time ASC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $events = $stmt->fetchAll();
+    return $events;
 } 

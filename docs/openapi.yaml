@@ -794,6 +794,52 @@ paths:
                 properties:
                   error:
                     type: string
+  /clubs/{id}/events:
+    get:
+      summary: Получить список мероприятий клуба
+      tags:
+        - events
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: type_id
+          schema:
+            type: integer
+        - in: query
+          name: date
+          schema:
+            type: string
+        - in: query
+          name: city
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список мероприятий клуба
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+        '401':
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 components:
   securitySchemes:
     bearerAuth:
@@ -875,6 +921,11 @@ components:
           type: number
         created_at:
           type: string
+        photos:
+          type: array
+          items:
+            type: string
+          description: Ссылки на фотографии клуба (строки URL, например https://...)
     ClubDetails:
       allOf:
         - $ref: '#/components/schemas/Club'
