@@ -99,6 +99,17 @@ if ($method === 'POST' && $path === '/login') {
     exit;
 }
 
+if ($method === 'POST' && $path === '/login/guest') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $device_id = $data['device_id'] ?? '';
+    $result = guest_login($device_id);
+    if (isset($result['error'])) {
+        http_response_code(400);
+    }
+    echo json_encode($result);
+    exit;
+}
+
 if ($method === 'POST' && $path === '/logout') {
     $refresh_token = $_COOKIE['refresh_token'] ?? null;
     $data = json_decode(file_get_contents('php://input'), true);
@@ -150,6 +161,12 @@ if ($method === 'PATCH' && $path === '/me') {
         ]);
         exit;
     }
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $fields = [];
     $params = [];
     if (isset($data['name'])) {
@@ -184,6 +201,12 @@ if ($method === 'PATCH' && $path === '/me') {
 }
 
 if ($method === 'GET' && $path === '/me/reviews') {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $db = new Database();
     $pdo = $db->getPdo();
     // Отзывы на клубы
@@ -254,6 +277,12 @@ if ($method === 'GET' && preg_match('#^/events/(\\d+)$#', $path, $matches)) {
 }
 
 if ($method === 'POST' && preg_match('#^/clubs/(\\d+)/reviews$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $data = json_decode(file_get_contents('php://input'), true);
     if (!isset($data['rating'], $data['review'])) {
         http_response_code(400);
@@ -266,6 +295,12 @@ if ($method === 'POST' && preg_match('#^/clubs/(\\d+)/reviews$#', $path, $matche
 }
 
 if ($method === 'POST' && preg_match('#^/events/(\\d+)/comments$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $data = json_decode(file_get_contents('php://input'), true);
     if (!isset($data['comment'])) {
         http_response_code(400);
@@ -278,18 +313,36 @@ if ($method === 'POST' && preg_match('#^/events/(\\d+)/comments$#', $path, $matc
 }
 
 if ($method === 'POST' && preg_match('#^/events/(\\d+)/attend$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $result = attend_event($user_id, (int)$matches[1]);
     echo json_encode($result);
     exit;
 }
 
 if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $result = unattend_event($user_id, (int)$matches[1]);
     echo json_encode($result);
     exit;
 }
 
 if ($method === 'GET' && $path === '/events/attending') {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $filters = [];
     if (isset($_GET['type_id'])) $filters['type_id'] = (int)$_GET['type_id'];
     if (isset($_GET['date'])) $filters['date'] = $_GET['date'];
@@ -300,6 +353,12 @@ if ($method === 'GET' && $path === '/events/attending') {
 }
 
 if ($method === 'GET' && $path === '/auth/sessions') {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $db = new Database();
     $pdo = $db->getPdo();
     $stmt = $pdo->prepare('SELECT id, device_id, user_agent, ip_address, created_at, expires_at FROM refresh_tokens WHERE user_id = ? AND is_active = 1');
@@ -310,6 +369,12 @@ if ($method === 'GET' && $path === '/auth/sessions') {
 }
 
 if ($method === 'DELETE' && preg_match('#^/auth/sessions/(\d+)$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
     $token_id = (int)$matches[1];
     $db = new Database();
     $pdo = $db->getPdo();

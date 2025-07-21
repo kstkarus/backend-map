@@ -4,7 +4,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NULL,
-    role ENUM('user', 'organizer', 'admin') DEFAULT 'user',
+    role ENUM('user', 'organizer', 'admin', 'guest') DEFAULT 'user',
     social_id VARCHAR(255),
     social_type VARCHAR(50),
     is_verified BOOLEAN DEFAULT FALSE,

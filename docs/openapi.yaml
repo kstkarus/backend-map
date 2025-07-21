@@ -96,6 +96,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationError'
+  /login/guest:
+    post:
+      summary: Вход как гость
+      tags:
+        - auth
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device_id:
+                  type: string
+                  description: Уникальный идентификатор устройства (опционально)
+      responses:
+        '200':
+          description: Успешный вход как гость
+          headers:
+            Set-Cookie:
+              description: 'HttpOnly cookie с refresh token'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Ошибка при создании гостя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
   /logout:
     post:
       summary: Выход из аккаунта
