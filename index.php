@@ -17,7 +17,7 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 
 
-if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/auth/refresh', '/auth/request-reset', '/auth/verify-reset-code', '/auth/reset-password', '/auth/request-email-verification', '/auth/verify-email-code'])) {
+if (!in_array($path, ['/register', '/login', '/docs', '/cities', '/auth/refresh', '/auth/request-reset', '/auth/verify-reset-code', '/auth/reset-password'])) {
     $headers = getallheaders();
     $auth = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
     if (preg_match('/^Bearer (.+)$/', $auth, $matches)) {

@@ -18,7 +18,7 @@ function get_clubs() {
         // Группируем фотографии по club_id
         $photos_by_club = [];
         foreach ($photos as $photo) {
-            $photos_by_club[$photo['club_id']][] = $photo['image_url'];
+            $photos_by_club[$photo['club_id']][] = '/photo.php?file=' . urlencode($photo['image_url']);
         }
         // Добавляем фотографии к клубам
         foreach ($clubs as &$club) {
@@ -44,7 +44,8 @@ function get_club($club_id) {
     // Получаем фотографии
     $stmt = $pdo->prepare('SELECT image_url FROM club_photos WHERE club_id = ?');
     $stmt->execute([$club_id]);
-    $club['photos'] = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $photos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $club['photos'] = array_map(function($img) { return '/photo.php?file=' . urlencode($img); }, $photos);
     // Получаем отзывы
     $stmt = $pdo->prepare('SELECT cr.*, u.name as user_name FROM club_reviews cr JOIN users u ON cr.user_id = u.id WHERE cr.club_id = ? ORDER BY cr.created_at DESC');
     $stmt->execute([$club_id]);
