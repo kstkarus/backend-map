@@ -243,19 +243,18 @@ function guest_login($device_id = '') {
     $pdo = $db->getPdo();
     $name = 'Гость';
     $role = 'guest';
-    $email = null;
     $city = null;
     $birthdate = null;
     $phone = null;
     $is_verified = 0;
     $unique_guest_id = 'guest_' . bin2hex(random_bytes(8));
-    
+    $guest_email = $unique_guest_id . '@guest.local';
     // Создаём гостевого пользователя в БД
     try {
         $pdo->beginTransaction();
         $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, city, birthdate, phone, role, is_verified, social_id, social_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
-            $unique_guest_id . '@guest.local', // email (уникальный)
+            $guest_email, // email (уникальный)
             '', // password_hash (нет пароля)
             $name,
             $city,
@@ -278,7 +277,7 @@ function guest_login($device_id = '') {
     // --- JWT ---
     $access_payload = [
         'user_id' => $user_id,
-        'email' => null,
+        'email' => $guest_email,
         'role' => $role,
         'is_verified' => 0
     ];
@@ -311,7 +310,7 @@ function guest_login($device_id = '') {
         'user' => [
             'id' => $user_id,
             'name' => $name,
-            'email' => null,
+            'email' => $guest_email,
             'city' => null,
             'birthdate' => null,
             'phone' => null,
