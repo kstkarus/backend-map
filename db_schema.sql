@@ -19,8 +19,10 @@ CREATE TABLE clubs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    address VARCHAR(255) NOT NULL,
     latitude FLOAT,
     longitude FLOAT,
+    price_level TINYINT NOT NULL CHECK (price_level >= 1 AND price_level <= 4),
     rating FLOAT DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -138,4 +140,15 @@ CREATE TABLE user_codes (
     used TINYINT(1) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+); 
+
+-- Избранные клубы
+CREATE TABLE club_favorites (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    club_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, club_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE
 ); 

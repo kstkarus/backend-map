@@ -29,4 +29,48 @@ function add_event_comment($user_id, $event_id, $comment) {
     $stmt = $pdo->prepare('INSERT INTO event_comments (user_id, event_id, comment) VALUES (?, ?, ?)');
     $stmt->execute([$user_id, $event_id, $comment]);
     return ['success' => true];
+}
+
+function update_club_review($user_id, $review_id, $rating, $review) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    // Проверка авторства
+    $stmt = $pdo->prepare('SELECT club_id FROM club_reviews WHERE id = ? AND user_id = ?');
+    $stmt->execute([$review_id, $user_id]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        return ['error' => 'Можно редактировать только свой отзыв'];
+    }
+    $club_id = $row['club_id'];
+    $stmt = $pdo->prepare('UPDATE club_reviews SET rating = ?, review = ? WHERE id = ?');
+    $stmt->execute([$rating, $review, $review_id]);
+    // Пересчёт рейтинга
+    $stmt = $pdo->prepare('SELECT AVG(rating) FROM club_reviews WHERE club_id = ?');
+    $stmt->execute([$club_id]);
+    $avg = $stmt->fetchColumn();
+    $stmt = $pdo->prepare('UPDATE clubs SET rating = ? WHERE id = ?');
+    $stmt->execute([$avg, $club_id]);
+    return ['success' => true];
+}
+
+function delete_club_review($user_id, $review_id) {
+    $db = new Database();
+    $pdo = $db->getPdo();
+    // Проверка авторства и получение club_id
+    $stmt = $pdo->prepare('SELECT club_id FROM club_reviews WHERE id = ? AND user_id = ?');
+    $stmt->execute([$review_id, $user_id]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        return ['error' => 'Можно удалить только свой отзыв'];
+    }
+    $club_id = $row['club_id'];
+    $stmt = $pdo->prepare('DELETE FROM club_reviews WHERE id = ?');
+    $stmt->execute([$review_id]);
+    // Пересчёт рейтинга
+    $stmt = $pdo->prepare('SELECT AVG(rating) FROM club_reviews WHERE club_id = ?');
+    $stmt->execute([$club_id]);
+    $avg = $stmt->fetchColumn();
+    $stmt = $pdo->prepare('UPDATE clubs SET rating = ? WHERE id = ?');
+    $stmt->execute([$avg, $club_id]);
+    return ['success' => true];
 } 

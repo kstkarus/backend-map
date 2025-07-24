@@ -167,6 +167,41 @@
     </div>
 
     <div class="block">
+        <h2>Избранное</h2>
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/clubs/{id}/favorite</span><br>
+            <b>Ответ:</b> <code>{ "success": true }</code>
+        </div>
+        <div class="endpoint">
+            <span class="method">DELETE</span> <span class="url">/clubs/{id}/favorite</span><br>
+            <b>Ответ:</b> <code>{ "success": true }</code>
+        </div>
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/me/favorites</span><br>
+            <b>Ответ:</b> список избранных клубов пользователя.<br>
+            <b>Пример:</b>
+            <pre>{
+  "clubs": [
+    { "id": 1, "name": "Night Club X", ... }
+  ]
+}</pre>
+        </div>
+    </div>
+    <div class="block">
+        <h2>Мои мероприятия</h2>
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/me/attending</span><br>
+            <b>Ответ:</b> список мероприятий, на которые записан пользователь.<br>
+            <b>Пример:</b>
+            <pre>{
+  "events": [
+    { "id": 1, "title": "Большая вечеринка", ... }
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <div class="block">
         <h2>Ошибки</h2>
         <pre>{ "error": "Текст ошибки" }</pre>
         <p>Если не передан токен или он невалиден — будет ошибка 401.</p>

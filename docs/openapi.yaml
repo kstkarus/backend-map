@@ -600,11 +600,80 @@ paths:
                           type: integer
                         name:
                           type: string
-  /events/attending:
+  /clubs/{id}/favorite:
+    post:
+      summary: Добавить клуб в избранное
+      tags: [clubs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Клуб добавлен в избранное
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: Ошибка (например, уже в избранном)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      summary: Удалить клуб из избранного
+      tags: [clubs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Клуб удалён из избранного
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+  /me/favorites:
+    get:
+      summary: Получить список избранных клубов пользователя
+      tags: [user]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список избранных клубов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clubs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Club'
+  /me/attending:
     get:
       summary: Получить список мероприятий, на которые записан пользователь
-      tags:
-        - events
+      tags: [user]
       security:
         - bearerAuth: []
       parameters:
@@ -939,6 +1008,17 @@ components:
           format: date-time
     Club:
       type: object
+      required:
+        - id
+        - name
+        - description
+        - address
+        - latitude
+        - longitude
+        - price_level
+        - rating
+        - created_at
+        - photos
       properties:
         id:
           type: integer
@@ -946,10 +1026,16 @@ components:
           type: string
         description:
           type: string
+        address:
+          type: string
+          description: Адрес клуба
         latitude:
           type: number
         longitude:
           type: number
+        price_level:
+          type: integer
+          description: Стоимость по 4-балльной шкале (1 — дешево, 4 — дорого)
         rating:
           type: number
         created_at:

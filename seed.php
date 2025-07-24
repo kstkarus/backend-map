@@ -18,6 +18,7 @@ $pdo->exec('TRUNCATE TABLE club_photos');
 $pdo->exec('TRUNCATE TABLE clubs');
 $pdo->exec('TRUNCATE TABLE users');
 $pdo->exec('TRUNCATE TABLE cities');
+$pdo->exec('TRUNCATE TABLE club_favorites'); // Добавляем очистку избранных клубов
 $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
 
 // Пользователи
@@ -40,11 +41,11 @@ foreach ($users as $u) {
 
 // Клубы
 $clubs = [
-    ['Night Club X', 'Лучший клуб города!', 55.751244, 37.618423, 4.5],
-    ['Bar Y', 'Уютный бар для своих.', 55.760186, 37.618711, 4.0],
+    ['Night Club X', 'Лучший клуб города!', 'ул. Примерная, 1', 55.751244, 37.618423, 3, 4.5],
+    ['Bar Y', 'Уютный бар для своих.', 'пр. Барный, 2', 55.760186, 37.618711, 2, 4.0],
 ];
 foreach ($clubs as $c) {
-    $stmt = $pdo->prepare('INSERT INTO clubs (name, description, latitude, longitude, rating) VALUES (?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO clubs (name, description, address, latitude, longitude, price_level, rating) VALUES (?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute($c);
 }
 
@@ -126,6 +127,17 @@ $cities = [
 foreach ($cities as $c) {
     $stmt = $pdo->prepare('INSERT INTO cities (name, is_active) VALUES (?, ?)');
     $stmt->execute($c);
+}
+
+// Избранные клубы
+$favorites = [
+    [1, 1], // user1 -> Night Club X
+    [2, 2], // user2 -> Bar Y
+    [1, 2], // user1 -> Bar Y
+];
+foreach ($favorites as $f) {
+    $stmt = $pdo->prepare('INSERT INTO club_favorites (user_id, club_id) VALUES (?, ?)');
+    $stmt->execute($f);
 }
 
 echo "Seed успешно выполнен!\n"; 

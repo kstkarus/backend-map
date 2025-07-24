@@ -225,7 +225,10 @@ if ($method === 'GET' && $path === '/me/reviews') {
 }
 
 if ($method === 'GET' && $path === '/clubs') {
-    $clubs = get_clubs();
+    $filters = [];
+    if (isset($_GET['city'])) $filters['city'] = $_GET['city'];
+    if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
+    $clubs = get_clubs($filters);
     echo json_encode(['clubs' => $clubs]);
     exit;
 }
@@ -336,7 +339,7 @@ if ($method === 'DELETE' && preg_match('#^/events/(\\d+)/attend$#', $path, $matc
     exit;
 }
 
-if ($method === 'GET' && $path === '/events/attending') {
+if ($method === 'GET' && $path === '/me/attending') {
     $user = get_user_by_id($user_id);
     if ($user && $user['role'] === 'guest') {
         http_response_code(403);
@@ -537,6 +540,81 @@ if ($method === 'GET' && $path === '/reset') {
     $token = isset($_GET['token']) ? urlencode($_GET['token']) : '';
     $location = '/reset_password.html' . ($token ? ('?token=' . $token) : '');
     header('Location: ' . $location, true, 302);
+    exit;
+}
+
+if ($method === 'PATCH' && preg_match('#^/clubs/(\d+)/reviews/(\d+)$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (!isset($data['rating'], $data['review'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Необходимы rating и review']);
+        exit;
+    }
+    $result = update_club_review($user_id, (int)$matches[2], (int)$data['rating'], $data['review']);
+    if (isset($result['error'])) {
+        http_response_code(403);
+    }
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'DELETE' && preg_match('#^/clubs/(\d+)/reviews/(\d+)$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
+    $result = delete_club_review($user_id, (int)$matches[2]);
+    if (isset($result['error'])) {
+        http_response_code(403);
+    }
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'POST' && preg_match('#^/clubs/(\d+)/favorite$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
+    $result = add_club_favorite($user_id, (int)$matches[1]);
+    if (isset($result['error'])) {
+        http_response_code(400);
+    }
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'DELETE' && preg_match('#^/clubs/(\d+)/favorite$#', $path, $matches)) {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
+    $result = remove_club_favorite($user_id, (int)$matches[1]);
+    echo json_encode($result);
+    exit;
+}
+
+if ($method === 'GET' && $path === '/me/favorites') {
+    $user = get_user_by_id($user_id);
+    if ($user && $user['role'] === 'guest') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Действие недоступно для гостя']);
+        exit;
+    }
+    $clubs = get_user_favorite_clubs($user_id);
+    echo json_encode(['clubs' => $clubs]);
     exit;
 }
 
