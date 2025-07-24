@@ -238,6 +238,248 @@ function login_user($email, $password, $device_id = '') {
     }
 }
 
+function guest_login($device_id = '') {
+
+
+    $db = new Database();
+
+
+    $pdo = $db->getPdo();
+
+
+    $name = 'Гость';
+
+
+    $role = 'guest';
+
+
+    $city = null;
+
+
+    $birthdate = null;
+
+
+    $phone = null;
+
+
+    $is_verified = 0;
+
+
+    $unique_guest_id = 'guest_' . bin2hex(random_bytes(8));
+
+
+    $guest_email = $unique_guest_id . '@guest.local';
+
+
+    // Создаём гостевого пользователя в БД
+
+
+    try {
+
+
+        $pdo->beginTransaction();
+
+
+        $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, city, birthdate, phone, role, is_verified, social_id, social_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+
+
+        $stmt->execute([
+
+
+            $guest_email, // email (уникальный)
+
+
+            '', // password_hash (нет пароля)
+
+
+            $name,
+
+
+            $city,
+
+
+            $birthdate,
+
+
+            $phone,
+
+
+            $role,
+
+
+            $is_verified,
+
+
+            $unique_guest_id,
+
+
+            'guest'
+
+
+        ]);
+
+
+        $user_id = (int)$pdo->lastInsertId();
+
+
+        $pdo->commit();
+
+
+    } catch (Exception $e) {
+
+
+        $pdo->rollBack();
+
+
+        return [
+
+
+            'error' => 'Ошибка при создании гостевого пользователя. Попробуйте позже.',
+
+
+            'debug' => $e->getMessage()
+
+
+        ];
+
+
+    }
+
+
+    // --- JWT ---
+
+
+    $access_payload = [
+
+
+        'user_id' => $user_id,
+
+
+        'email' => $guest_email,
+
+
+        'role' => $role,
+
+
+        'is_verified' => 0
+
+
+    ];
+
+
+    $access_token = create_jwt($access_payload, 900); // 15 минут
+
+
+    $refresh_token = generate_refresh_token();
+
+
+    $refresh_expires = date('Y-m-d H:i:s', time() + 60*60*24*14); // 14 дней
+
+
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+
+
+    try {
+
+
+        $pdo->beginTransaction();
+
+
+        save_refresh_token($user_id, $refresh_token, $refresh_expires, $user_agent, $ip, $device_id);
+
+
+        $pdo->commit();
+
+
+        setcookie('refresh_token', $refresh_token, [
+
+
+            'expires' => strtotime($refresh_expires),
+
+
+            'httponly' => true,
+
+
+            'samesite' => 'Lax',
+
+
+            'path' => '/',
+
+
+            'secure' => isset($_SERVER['HTTPS'])
+
+
+        ]);
+
+
+    } catch (Exception $e) {
+
+
+        $pdo->rollBack();
+
+
+        return [
+
+
+            'error' => 'Гостевой пользователь создан, но не удалось создать refresh_token. Попробуйте войти заново.',
+
+
+            'debug' => $e->getMessage()
+
+
+        ];
+
+
+    }
+
+
+    return [
+
+
+        'success' => true,
+
+
+        'access_token' => $access_token,
+
+
+        'user' => [
+
+
+            'id' => $user_id,
+
+
+            'name' => $name,
+
+
+            'email' => $guest_email,
+
+
+            'city' => null,
+
+
+            'birthdate' => null,
+
+
+            'phone' => null,
+
+
+            'role' => $role,
+
+
+            'is_verified' => 0,
+
+
+        ]
+
+
+    ];
+
+
+}
+
 function get_user_by_id($user_id) {
     $db = new Database();
     $pdo = $db->getPdo();
