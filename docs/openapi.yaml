@@ -28,8 +28,8 @@ paths:
                 name:
                   type: string
                 city:
-                  type: string
-                  description: Город должен быть выбран из списка, возвращаемого эндпоинтом /cities
+                  $ref: '#/components/schemas/City'
+                  description: Город должен быть выбран из списка, возвращаемого эндпоинтом /cities. Теперь это объект {id, name}.
                 birthdate:
                   type: string
                 phone:
@@ -942,6 +942,57 @@ paths:
                 properties:
                   error:
                     type: string
+  /me/avatar:
+    post:
+      summary: Загрузить аватарку пользователя
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Файл изображения (jpeg, png, gif, до 2 МБ)
+      responses:
+        '200':
+          description: Аватарка успешно загружена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  avatar:
+                    type: string
+                    description: Абсолютный URL новой аватарки
+        '400':
+          description: Ошибка загрузки или валидации файла
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Неавторизован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 components:
   securitySchemes:
     bearerAuth:
@@ -982,7 +1033,7 @@ components:
         email:
           type: string
         city:
-          type: string
+          $ref: '#/components/schemas/City'
           nullable: true
         birthdate:
           type: string
@@ -993,7 +1044,7 @@ components:
           nullable: true
         role:
           type: string
-          enum: [user, organizer, admin]
+          enum: [user, organizer, admin, guest]
         social_id:
           type: string
           nullable: true
@@ -1006,6 +1057,13 @@ components:
         created_at:
           type: string
           format: date-time
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
     Club:
       type: object
       required:

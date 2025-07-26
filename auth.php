@@ -148,7 +148,7 @@ function register_user($email, $password, $name = null, $city = null, $birthdate
             'id' => $user_id,
             'name' => $name,
             'email' => $email,
-            'city' => $city,
+            'city' => get_city_by_name($city),
             'birthdate' => $birthdate,
             'phone' => $clean_phone,
             'role' => 'user',
@@ -223,7 +223,7 @@ function login_user($email, $password, $device_id = '') {
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'email' => $email,
-                'city' => $user['city'],
+                'city' => get_city_by_name($user['city']),
                 'birthdate' => $user['birthdate'],
                 'phone' => $user['phone'],
                 'role' => $user['role'],
@@ -457,7 +457,7 @@ function guest_login($device_id = '') {
             'email' => $guest_email,
 
 
-            'city' => null,
+            'city' => get_city_by_name($city),
 
 
             'birthdate' => null,

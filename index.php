@@ -131,21 +131,29 @@ if ($method === 'GET' && $path === '/me') {
         echo json_encode(['error' => 'Пользователь не найден']);
         exit;
     }
-    
+    // Формируем абсолютный URL для аватарки
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $avatar = $user['avatar'] ?? null;
+    if ($avatar) {
+        $avatar = $protocol . '://' . $host . '/' . ltrim($avatar, '/');
+    } else {
+        $avatar = $protocol . '://' . $host . '/uploads/default.jpg';
+    }
     $response = [
         'success' => true,
         'user' => [
             'id' => $user['id'],
             'name' => $user['name'],
             'email' => $user['email'],
-            'city' => $user['city'],
+            'city' => get_city_by_name($user['city']),
             'birthdate' => $user['birthdate'],
             'phone' => $user['phone'],
             'role' => $user['role'],
-            'is_verified' => $user['is_verified']
+            'is_verified' => $user['is_verified'],
+            'avatar' => $avatar
         ]
     ];
-    
     echo json_encode($response);
     exit;
 }
@@ -615,6 +623,51 @@ if ($method === 'GET' && $path === '/me/favorites') {
     }
     $clubs = get_user_favorite_clubs($user_id);
     echo json_encode(['clubs' => $clubs]);
+    exit;
+}
+
+if ($method === 'POST' && $path === '/me/avatar') {
+    if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Файл не загружен']);
+        exit;
+    }
+    $file = $_FILES['avatar'];
+    $validation = validate_avatar_upload($file);
+    if (!$validation['valid']) {
+        http_response_code(400);
+        echo json_encode(['error' => $validation['error']]);
+        exit;
+    }
+    $db = new Database();
+    $pdo = $db->getPdo();
+    // Получаем старую аватарку
+    $stmt = $pdo->prepare('SELECT avatar FROM users WHERE id = ?');
+    $stmt->execute([$user_id]);
+    $oldAvatar = $stmt->fetchColumn();
+    // Генерируем имя файла
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'avatar_' . $user_id . '_' . time() . '.' . $ext;
+    $uploadDir = __DIR__ . '/uploads/avatars/';
+    $uploadPath = $uploadDir . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Ошибка при сохранении файла']);
+        exit;
+    }
+    $relativePath = 'uploads/avatars/' . $filename;
+    $stmt = $pdo->prepare('UPDATE users SET avatar = ? WHERE id = ?');
+    $stmt->execute([$relativePath, $user_id]);
+    // Удаляем старую аватарку, если она есть и не дефолтная
+    if ($oldAvatar && $oldAvatar !== 'uploads/default.jpg' && file_exists(__DIR__ . '/' . $oldAvatar)) {
+        @unlink(__DIR__ . '/' . $oldAvatar);
+    }
+    // Формируем абсолютный URL для новой аватарки
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $avatarUrl = $protocol . '://' . $host . '/' . ltrim($relativePath, '/');
+    http_response_code(200);
+    echo json_encode(['success' => true, 'avatar' => $avatarUrl]);
     exit;
 }
 

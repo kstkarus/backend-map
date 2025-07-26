@@ -68,6 +68,16 @@ function update_user_password($user_id, $password) {
     $stmt->execute([$hash, $user_id]);
 }
 
+function get_city_by_name($city_name) {
+    if (!$city_name) return null;
+    $db = new Database();
+    $pdo = $db->getPdo();
+    $stmt = $pdo->prepare('SELECT id, name FROM cities WHERE name = ? AND is_active = 1');
+    $stmt->execute([$city_name]);
+    $city = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $city ?: null;
+}
+
 // Подключаем приватный конфиг
 $smtp_config = file_exists(__DIR__ . '/config.local.php') ? require __DIR__ . '/config.local.php' : [];
 $jwt_secret = $smtp_config['jwt_secret'] ?? 'default_secret';
