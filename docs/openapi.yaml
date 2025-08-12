@@ -1103,6 +1103,9 @@ components:
           items:
             type: string
           description: Ссылки на фотографии клуба (строки URL, например https://...)
+        is_favorite:
+          type: boolean
+          description: Признак, что клуб в избранном у текущего пользователя
     ClubDetails:
       allOf:
         - $ref: '#/components/schemas/Club'

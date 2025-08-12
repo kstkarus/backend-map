@@ -242,7 +242,7 @@ if ($method === 'GET' && $path === '/clubs') {
 }
 
 if ($method === 'GET' && preg_match('#^/clubs/(\\d+)$#', $path, $matches)) {
-    $club = get_club((int)$matches[1]);
+    $club = get_club((int)$matches[1], $user_id ?? null);
     if (!$club) {
         http_response_code(404);
         echo json_encode(['error' => 'Клуб не найден']);
@@ -544,12 +544,7 @@ if ($method === 'POST' && $path === '/auth/verify-email-code') {
     exit;
 }
 
-if ($method === 'GET' && $path === '/reset') {
-    $token = isset($_GET['token']) ? urlencode($_GET['token']) : '';
-    $location = '/reset_password.html' . ($token ? ('?token=' . $token) : '');
-    header('Location: ' . $location, true, 302);
-    exit;
-}
+// Устаревший роут /reset удалён; используется /auth/reset-password
 
 if ($method === 'PATCH' && preg_match('#^/clubs/(\d+)/reviews/(\d+)$#', $path, $matches)) {
     $user = get_user_by_id($user_id);
@@ -649,6 +644,9 @@ if ($method === 'POST' && $path === '/me/avatar') {
     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = 'avatar_' . $user_id . '_' . time() . '.' . $ext;
     $uploadDir = __DIR__ . '/uploads/avatars/';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0755, true);
+    }
     $uploadPath = $uploadDir . $filename;
     if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
         http_response_code(500);

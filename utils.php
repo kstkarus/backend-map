@@ -8,6 +8,14 @@ require_once __DIR__ . '/phpmailer/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+function app_env_is_dev() {
+    $env = getenv('APP_ENV');
+    if ($env === false && isset($_SERVER['APP_ENV'])) {
+        $env = $_SERVER['APP_ENV'];
+    }
+    return strtolower((string)$env) === 'dev';
+}
+
 function base64url_encode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
@@ -107,9 +115,13 @@ function send_reset_email($email, $reset_link) {
         $mail->Body = 'Для сброса пароля перейдите по ссылке: <a href="' . htmlspecialchars($reset_link) . '">' . htmlspecialchars($reset_link) . '</a>';
         $mail->AltBody = 'Для сброса пароля перейдите по ссылке: ' . $reset_link;
 
-        // Включаем отладку PHPMailer
-        $mail->SMTPDebug = 2;
-        $mail->Debugoutput = function($str, $level) use ($log_dir) { file_put_contents($log_dir . '/phpmailer_debug.log', $str . PHP_EOL, FILE_APPEND); };
+        // Включаем SMTP отладку только в dev-окружении
+        if (app_env_is_dev()) {
+            $mail->SMTPDebug = 2;
+            $mail->Debugoutput = function($str, $level) use ($log_dir) { file_put_contents($log_dir . '/phpmailer_debug.log', $str . PHP_EOL, FILE_APPEND); };
+        } else {
+            $mail->SMTPDebug = 0;
+        }
 
         $mail->send();
     } catch (Exception $e) {
@@ -222,6 +234,14 @@ function send_code_email($email, $code, $type) {
         $mail->setFrom($smtp_config['smtp_from'] ?? '', $smtp_config['smtp_from_name'] ?? '');
         $mail->addAddress($email);
         $mail->isHTML(true);
+        if (app_env_is_dev()) {
+            $log_dir = __DIR__ . '/logs';
+            if (!is_dir($log_dir)) { @mkdir($log_dir, 0777, true); }
+            $mail->SMTPDebug = 2;
+            $mail->Debugoutput = function($str, $level) use ($log_dir) { file_put_contents($log_dir . '/phpmailer_debug.log', $str . PHP_EOL, FILE_APPEND); };
+        } else {
+            $mail->SMTPDebug = 0;
+        }
         if ($type === 'reset') {
             $mail->Subject = 'Код для сброса пароля';
             $mail->Body = 'Ваш код для сброса пароля: <b>' . htmlspecialchars($code) . '</b><br>Код действует 10 минут.';

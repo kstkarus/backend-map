@@ -262,3 +262,39 @@ function validate_profile_update_data($data) {
     }
     return ['valid' => true];
 } 
+
+/**
+ * Валидация загружаемого аватара
+ */
+function validate_avatar_upload(array $file) {
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+        return ['valid' => false, 'error' => 'Файл не загружен'];
+    }
+    // Ограничение размера: до 2 МБ
+    $maxBytes = 2 * 1024 * 1024;
+    if (!isset($file['size']) || $file['size'] <= 0 || $file['size'] > $maxBytes) {
+        return ['valid' => false, 'error' => 'Файл слишком большой (максимум 2 МБ)'];
+    }
+    // Проверка MIME через finfo
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = $finfo ? finfo_file($finfo, $file['tmp_name']) : null;
+    if ($finfo) { finfo_close($finfo); }
+    $allowedMimes = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+    ];
+    if (!$mime || !array_key_exists($mime, $allowedMimes)) {
+        return ['valid' => false, 'error' => 'Разрешены только изображения JPEG, PNG или GIF'];
+    }
+    // Проверка расширения имени файла (дополнительно к MIME)
+    $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+    if ($ext && !in_array($ext, array_values($allowedMimes), true)) {
+        return ['valid' => false, 'error' => 'Недопустимое расширение файла'];
+    }
+    // Базовая проверка, что это действительно изображение
+    if (@getimagesize($file['tmp_name']) === false) {
+        return ['valid' => false, 'error' => 'Файл не является валидным изображением'];
+    }
+    return ['valid' => true];
+}

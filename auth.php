@@ -106,10 +106,11 @@ function register_user($email, $password, $name = null, $city = null, $birthdate
         $pdo->commit();
     } catch (Exception $e) {
         $pdo->rollBack();
-        return [
-            'error' => 'Ошибка при создании аккаунта. Попробуйте позже.',
-            'debug' => $e->getMessage()
-        ];
+        $isDev = false; $env = getenv('APP_ENV'); if ($env === false && isset($_SERVER['APP_ENV'])) { $env = $_SERVER['APP_ENV']; }
+        if (strtolower((string)$env) === 'dev') { $isDev = true; }
+        $resp = ['error' => 'Ошибка при создании аккаунта. Попробуйте позже.'];
+        if ($isDev) { $resp['debug'] = $e->getMessage(); }
+        return $resp;
     }
     // --- JWT ---
     $access_payload = [
@@ -136,10 +137,11 @@ function register_user($email, $password, $name = null, $city = null, $birthdate
         ]);
     } catch (Exception $e) {
         $pdo->rollBack();
-        return [
-            'error' => 'Пользователь создан, но не удалось создать refresh_token. Попробуйте войти заново.',
-            'debug' => $e->getMessage()
-        ];
+        $isDev = false; $env = getenv('APP_ENV'); if ($env === false && isset($_SERVER['APP_ENV'])) { $env = $_SERVER['APP_ENV']; }
+        if (strtolower((string)$env) === 'dev') { $isDev = true; }
+        $resp = ['error' => 'Пользователь создан, но не удалось создать refresh_token. Попробуйте войти заново.'];
+        if ($isDev) { $resp['debug'] = $e->getMessage(); }
+        return $resp;
     }
     return [
         'success' => true,
@@ -231,10 +233,11 @@ function login_user($email, $password, $device_id = '') {
             ]
         ];
     } catch (Exception $e) {
-        return [
-            'error' => 'Ошибка при входе в систему. Попробуйте позже.',
-            'debug' => $e->getMessage() // Убрать в продакшене
-        ];
+        $isDev = false; $env = getenv('APP_ENV'); if ($env === false && isset($_SERVER['APP_ENV'])) { $env = $_SERVER['APP_ENV']; }
+        if (strtolower((string)$env) === 'dev') { $isDev = true; }
+        $resp = ['error' => 'Ошибка при входе в систему. Попробуйте позже.'];
+        if ($isDev) { $resp['debug'] = $e->getMessage(); }
+        return $resp;
     }
 }
 
@@ -326,23 +329,12 @@ function guest_login($device_id = '') {
 
 
     } catch (Exception $e) {
-
-
         $pdo->rollBack();
-
-
-        return [
-
-
-            'error' => 'Ошибка при создании гостевого пользователя. Попробуйте позже.',
-
-
-            'debug' => $e->getMessage()
-
-
-        ];
-
-
+        $isDev = false; $env = getenv('APP_ENV'); if ($env === false && isset($_SERVER['APP_ENV'])) { $env = $_SERVER['APP_ENV']; }
+        if (strtolower((string)$env) === 'dev') { $isDev = true; }
+        $resp = ['error' => 'Ошибка при создании гостевого пользователя. Попробуйте позже.'];
+        if ($isDev) { $resp['debug'] = $e->getMessage(); }
+        return $resp;
     }
 
 
@@ -416,23 +408,12 @@ function guest_login($device_id = '') {
 
 
     } catch (Exception $e) {
-
-
         $pdo->rollBack();
-
-
-        return [
-
-
-            'error' => 'Гостевой пользователь создан, но не удалось создать refresh_token. Попробуйте войти заново.',
-
-
-            'debug' => $e->getMessage()
-
-
-        ];
-
-
+        $isDev = false; $env = getenv('APP_ENV'); if ($env === false && isset($_SERVER['APP_ENV'])) { $env = $_SERVER['APP_ENV']; }
+        if (strtolower((string)$env) === 'dev') { $isDev = true; }
+        $resp = ['error' => 'Гостевой пользователь создан, но не удалось создать refresh_token. Попробуйте войти заново.'];
+        if ($isDev) { $resp['debug'] = $e->getMessage(); }
+        return $resp;
     }
 
 

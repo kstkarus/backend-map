@@ -64,7 +64,7 @@ function get_clubs($filters = []) {
     return $clubs;
 }
 
-function get_club($club_id) {
+function get_club($club_id, $user_id = null) {
     $db = new Database();
     $pdo = $db->getPdo();
     $stmt = $pdo->prepare('SELECT * FROM clubs WHERE id = ?');
@@ -87,6 +87,13 @@ function get_club($club_id) {
     $stmt = $pdo->prepare('SELECT cr.*, u.name as user_name FROM club_reviews cr JOIN users u ON cr.user_id = u.id WHERE cr.club_id = ? ORDER BY cr.created_at DESC');
     $stmt->execute([$club_id]);
     $club['reviews'] = $stmt->fetchAll();
+    // Признак избранного для текущего пользователя
+    $club['is_favorite'] = false;
+    if ($user_id !== null) {
+        $favStmt = $pdo->prepare('SELECT 1 FROM club_favorites WHERE user_id = ? AND club_id = ? LIMIT 1');
+        $favStmt->execute([$user_id, $club_id]);
+        $club['is_favorite'] = (bool)$favStmt->fetchColumn();
+    }
     return $club;
 }
 
